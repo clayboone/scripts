@@ -19,7 +19,7 @@ echo -e "Starting basic tests..."
 echo -en "Ping local gateway\t"
 s=$(route -n | grep "^0.0.0.0" | awk '{ print $2 }');
 $PING -c 1 $s >/dev/null 2>&1; r=$?;
-if [ $? -eq 0 ]; then
+if [ $r -eq 0 ]; then
 	echo -ne "OK"; 
 else
 	echo -ne "NOT OK"; 
