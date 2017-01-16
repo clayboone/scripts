@@ -4,19 +4,52 @@
 TMPFILE=/tmp/$(whoami)-$(basename $0).tmp
 ALLGOOD=y
 
-# check depends
+# depends
 NMCLI=$(which nmcli)
 WGET=$(which wget)
 NPING=$(which nping)
 MTR=$(which mtr)
 PING=$(which ping)
 
+
+# library
+function ntStandardPing()
+# send $1 standard echo requests to $2 (8.8.8.8, by default) cisco style
+# (print a "!" in each place where we receive a reply or
+#  print a "." in each place where we do not receive a reply)
+# return number of packets received
+{
+	count=${1:-15}
+	server_ip=${2:-"8.8.8.8"}
+	ret=0
+
+	for (( i = 0; i < $count; i++ ))
+	do
+		if ( $PING -c 1 -W 2 $server_ip >/dev/null 2>&1 ); then
+			echo -ne "!"
+			let ret++
+		else
+			echo -ne "."
+		fi
+	done
+	echo # newline after bangs and dots
+
+	return $ret
+}
+
 # some basic tests
 echo -e "Starting basic tests..."
 
+# main()
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]];
+then
+	# ping default gateway
+	echo -en "Ping default gateway:\t"
+	ntStandardPing(10,$gw)
+fi
 
 #default gateway?
-echo -en "Ping local gateway\t"
+echo -en "L3\t"
 s=$(route -n | grep "^0.0.0.0" | awk '{ print $2 }');
 $PING -c 1 $s >/dev/null 2>&1; r=$?;
 if [ $r -eq 0 ]; then
@@ -31,9 +64,9 @@ echo -e "\t(${s:-"No Gateway"})"
 s=8.8.8.8; 
 $PING -c 1 $s >/dev/null 2>&1; 
 if [ $? -eq 0 ]; then 
-	echo -e "Inet L3 $PING\tOK\t($s)"; 
+	echo -e "Ping remote node\tOK\t($s)"; 
 else 
-	echo -e "Inet L3 $PING\tNOT OK\t($s)"; 
+	echo -e "Ping remote node\tNOT OK\t($s)"; 
 	ALLGOOD="n";
 fi; 
 
@@ -108,22 +141,22 @@ fi
 # $PING flood to default gateway (local)
 s=$(route -n | grep "^0.0.0.0" | awk '{ print $2 }');
 if [ "$(id -u)" -eq 0 ]; then
-	echo -ne "Fast local $PING flood ($s):\t"
+	echo -ne "Fast local ping flood ($s):\t"
 	$PING -q -c  50 -f $s | grep "packet loss" | \
 		awk '{ print $4 " out of " $1 " received (" $6 " loss)" }'
 else
-	echo -ne "Slow local $PING flood ($s):\t"
+	echo -ne "Slow local ping flood ($s):\t"
 	$PING -q -c 25 -f -i 0.2 8.8.8.8 | grep "packet loss" | \
 		awk '{ print $4 " out of " $1 " received (" $6 " loss)" }'
 fi
 
 # $PING flood to google dns (remote)
 if [ "$(id -u)" -eq 0 ]; then
-	echo -ne "Fast remote $PING flood (8.8.8.8):\t"
+	echo -ne "Fast remote ping flood (8.8.8.8):\t"
 	$PING -q -c 50 -f 8.8.8.8 | grep "packet loss" | \
 		awk '{ print $4 " out of " $1 " received (" $6 " loss)" }'
 else
-	echo -ne "Slow remote $PING flood (8.8.8.8):\t"
+	echo -ne "Slow remote ping flood (8.8.8.8):\t"
 	$PING -q -c 25 -f -i 0.2 8.8.8.8 | grep "packet loss" | \
 		awk '{ print $4 " out of " $1 " received (" $6 " loss)" }'
 fi
