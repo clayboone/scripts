@@ -1,2 +1,2 @@
 #!/bin/bash
-exec ps -fep $(pgrep -fi $@)
+exec ps -fp $(pgrep -i $@)
