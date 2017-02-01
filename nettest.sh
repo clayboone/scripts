@@ -45,7 +45,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]];
 then
 	# ping default gateway
 	echo -en "Ping default gateway:\t"
-	ntStandardPing(10,$gw)
+	ntStandardPing 10 $gw
 fi
 
 #default gateway?
