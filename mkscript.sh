@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ "$#" -ne 1 ];
 then
@@ -12,8 +12,32 @@ then
 	exit 2
 fi
 
+# note this uses a bashism $()
+filetype=$(echo $1 | cut -d '.' -f '2-')
 
-# maybe i can use readline to pipe input in, and only use
-# this as a fallback if there's is no stdin?
-echo "#!/bin/sh" >> $1
+case $filetype in
+	"rb")
+		shebang_line="#!/usr/bin/env ruby"
+		;;
+	"py")
+		shebang_line="#!/usr/bin/env python"
+		;;
+	"sh")
+		shebang_line="#!/bin/sh"
+		;;
+	*)
+		if [ -t 0 ]; then
+			echo "I don't understand that filetype yet!"
+			exit 1
+		fi
+		;;
+esac
+
+if [ -t 0 ]; then
+	echo $shebang_line >> $1
+else
+	while read -r input_line ; do
+		echo $input_line >> $1
+	done
+fi
 chmod +x $1
