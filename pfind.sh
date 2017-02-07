@@ -1,2 +1,3 @@
 #!/bin/bash
-exec ps -fp $(pgrep -i $@)
+PIDLIST="$(pgrep -i $@)"
+[ -n "$PIDLIST" ] && exec ps -p $PIDLIST
