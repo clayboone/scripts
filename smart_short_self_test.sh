@@ -84,13 +84,17 @@ _term() {
 
 _int() {
 	echo -e "\n$ARGV0: Received user abort. Attempting to cancel operation"
-	_hup
 	_cleanup
 }
 
 _hup() {
 	echo
-	smartctl -l selftest $device
+	result=$(smartctl -l selftest $device | grep -A 1 "^Num" | tail -n 1)
+	if [ -z "$result" ]; then
+		echo "$ARGV0: No smart tests have been run"
+	fi
+	# TODO, expound this later, please
+	echo $result
 }
 
 _cleanup() {
@@ -100,6 +104,8 @@ _cleanup() {
 	else
 		echo "$ARGV0 returned $? after asking disk to cancel operation"
 	fi
+
+	_hup
 	exit 1
 }
 
