@@ -34,6 +34,7 @@ gotchas=( \
 	"Unable to detect device type" \
 	"No such device" \
 	"Permission denied" \
+	"Unknown USB bridge" \
 	)
 
 for i in ${gotchas[@]}; do
