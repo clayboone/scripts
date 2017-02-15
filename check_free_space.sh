@@ -1,3 +1,3 @@
 #!/bin/bash
 
-df -h | egrep '(Avail|sd[b-z])' # dont' include sda
+df -h | grep -E '(Avail|sd[b-z])' # dont' include sda
