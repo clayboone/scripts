@@ -6,4 +6,4 @@
 
 # sorry it's all one line.. it was originally inside of the i3 config file, but i3 complained because it was too complicated :(
 
-t=$(zenity --entry --title="Google search..." --text="Ask the oracle"); if [ $? -eq 0 ]; then if [ "x$t" == "x" ]; then google-chrome --new-tab "https://google.com/search?btnI"; else google-chrome --new-tab "https://google.com/search?q=$t&btnI"; fi; fi;
+t=$(zenity --entry --title="Google search..." --text="Ask the oracle"); if [ $? -eq 0 ]; then if [ "x$t" == "x" ]; then google-chrome --new-tab "https://google.com/"; else google-chrome --new-tab "https://google.com/search?q=$t&btnI"; fi; fi;
