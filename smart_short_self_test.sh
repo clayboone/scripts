@@ -73,7 +73,7 @@ echo
 
 # some important attributes
 echo -e "--------------------------------------------------\nImportant SMART attributes:\n"
-$SMARTCTL -A $device | grep -i -E '(power|temperature|current|reallocated|seek)' | awk '{ print $10, "...\t", $2 }'
+$SMARTCTL -A $device | grep -i -E '(power|temperature|current|reallocated|reported|seek)' | awk '{ print $10, "...\t", $2 }'
 echo
 
 # setup signal handler (ctrl-c, shutdown/reboot, and kill's default)
