@@ -4,6 +4,7 @@
 
 ARGV0="$(basename $0)"
 SMARTCTL="$(which smartctl)"
+RUBY="$(which ruby)"
 STDERR="/dev/stderr"
 TMPFILE="$(mktemp)"
 
@@ -24,6 +25,11 @@ fi
 if [ ! -x $SMARTCTL ]; then
 	echo "$ARGV0: Can't find smartctl (do you have smartmontools installed?)" >$STDERR
 	exit 1
+fi
+
+if [ ! -x $RUBY ]; then
+	echo "$ARGV0: This version requires ruby to be installed and executable from your \$PATH"
+	exit 2
 fi
 
 # check to see if smartctl is runnable as this user by checking if smart is enabled
@@ -90,8 +96,31 @@ for cmd in "xerror" "error"; do
 	unset cmd
 done
 
-# setup signal handler (ctrl-c, shutdown/reboot, and kill's default)
+# progress bar helper via https://gist.github.com/ivanalejandro0/9159989
+# there was also a super fancy unicode one, but this should support far more distros/OSs
+progress(){
+    # example usage:
+    # progress 30G 9G 30
+    # 30G [================>.................................] 30% (9G)
 
+    # params:
+    # $1 = total value (e.g.: source size)
+    # $2 = current value (e.g.: destination size)
+    # $3 = percent completed
+    [[ -z $1 || -z $2 || -z $3 ]] && exit  # on empty param...
+
+    percent=$3
+    completed=$(( $percent / 2 ))
+    remaining=$(( 50 - $completed ))
+
+    echo -ne "\r$1 ["
+    printf "%0.s=" `seq $completed`
+    echo -n ">"
+    [[ $remaining != 0 ]] && printf "%0.s." `seq $remaining` #shouldn't this be -gt or -ge instead of != ?
+    echo -n "] $percent% ($2)  "
+}
+
+# setup signal handler (ctrl-c, shutdown/reboot, and kill's default)
 _term() {
 	echo -e "\n$ARGV0: Caught shutdown signal. Attempting to cancel operation"
 	_cleanup
@@ -117,6 +146,7 @@ _cleanup() {
 	if [ $? -eq 0 ]; then
 		echo "$ARGV0: Cancelled self-test successfully."
 	else
+		# TODO this is ugly and not helpful
 		echo "$ARGV0 returned $? after asking disk to cancel operation."
 	fi
 
@@ -130,7 +160,18 @@ trap _hup SIGHUP
 
 # actual scan part
 echo -e "--------------------------------------------------\nBeginning short self-test now (Ctrl+C to cancel)\n"
-$SMARTCTL -t short $device >/dev/null
-sleep 140
+run_minutes=$($SMARTCTL -t short $device | grep -o 'Please wait [0-9]*' | cut -d ' ' -f 3)
+let run_seconds=60*$run_minutes
+for each_second in $(seq $run_seconds -2 2); do
+	# show progress
+	let cur=$run_seconds-$each_second
+	percent=$(echo print "($cur/$run_seconds.0*100).floor" | ruby) # TODO ruby ...
+	progress $run_seconds $cur $percent
+	# check for error yet
+	
+	# sleep
+	sleep 2
+done
+
 _hup
 exit 0
