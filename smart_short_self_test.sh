@@ -78,7 +78,7 @@ echo
 
 # smart error log
 # this is probably the least efficient way i can think to do this..
-echo -e "--------------------------------------------------\nSmart error log (smartctl -l xerror,error <dev>):\n"
+echo -e "--------------------------------------------------\nSmart error log (smartctl -l xerror,error <dev>):"
 for cmd in "xerror" "error"; do
 	result=$($SMARTCTL -l $cmd $device | grep "ATA Error Count")
 	num_errors=$(echo $result | grep -o '[0-9]*$') # i was getting this for something..
