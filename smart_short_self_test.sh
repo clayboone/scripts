@@ -64,7 +64,7 @@ if [ $? -ne 0 ]; then
 		echo "$ARGV0: SMART has been enabled."
 	fi
 fi
-rm -f $TMPFILE >/dev/null 2>&1 # this is probably super dangerous..
+rm -f $TMPFILE >/dev/null 2>&1
 
 # overall health
 echo "--------------------------------------------------"
@@ -75,6 +75,20 @@ echo
 echo -e "--------------------------------------------------\nImportant SMART attributes:\n"
 $SMARTCTL -A $device | grep -i -E '(power|temperature|current|reallocated|reported|seek)' | awk '{ print $10, "...\t", $2 }'
 echo
+
+# smart error log
+# this is probably the least efficient way i can think to do this..
+echo -e "--------------------------------------------------\nSmart error log (smartctl -l xerror,error <dev>):\n"
+for cmd in "xerror" "error"; do
+	result=$($SMARTCTL -l $cmd $device | grep "ATA Error Count")
+	num_errors=$(echo $result | grep -o '[0-9]*$') # i was getting this for something..
+	if [ $? -eq 0 ]; then
+		echo $result
+		$SMARTCTL -l $cmd $device | grep "Error [0-9]* occurred at"
+	fi
+	unset result
+	unset cmd
+done
 
 # setup signal handler (ctrl-c, shutdown/reboot, and kill's default)
 
@@ -103,7 +117,7 @@ _cleanup() {
 	if [ $? -eq 0 ]; then
 		echo "$ARGV0: Cancelled self-test successfully."
 	else
-		echo "$ARGV0 returned $? after asking disk to cancel operation"
+		echo "$ARGV0 returned $? after asking disk to cancel operation."
 	fi
 
 	_hup
