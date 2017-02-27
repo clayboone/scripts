@@ -162,7 +162,7 @@ trap _hup SIGHUP
 echo -e "--------------------------------------------------\nBeginning short self-test now (Ctrl+C to cancel)\n"
 run_minutes=$($SMARTCTL -t short $device | grep -o 'Please wait [0-9]*' | cut -d ' ' -f 3)
 let run_seconds=60*$run_minutes
-for each_second in $(seq $run_seconds -2 2); do
+for each_second in $(seq $run_seconds -2 0); do
 	# show progress
 	let cur=$run_seconds-$each_second
 	percent=$(echo print "($cur/$run_seconds.0*100).floor" | ruby) # TODO ruby ...
