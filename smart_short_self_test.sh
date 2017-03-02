@@ -113,11 +113,11 @@ progress(){
     completed=$(( $percent / 2 ))
     remaining=$(( 50 - $completed ))
 
-    echo -ne "\r$1 ["
+    echo -ne "\r$2/$1 ["
     printf "%0.s=" `seq $completed`
     echo -n ">"
     [[ $remaining != 0 ]] && printf "%0.s." `seq $remaining` #shouldn't this be -gt or -ge instead of != ?
-    echo -n "] $percent% ($2)  "
+    echo -n "] $percent%"
 }
 
 # setup signal handler (ctrl-c, shutdown/reboot, and kill's default)
@@ -162,7 +162,7 @@ trap _hup SIGHUP
 echo -e "--------------------------------------------------\nBeginning short self-test now (Ctrl+C to cancel)\n"
 run_minutes=$($SMARTCTL -t short $device | grep -o 'Please wait [0-9]*' | cut -d ' ' -f 3)
 let run_seconds=60*$run_minutes
-for each_second in $(seq $run_seconds -2 0); do
+for each_second in $(seq $run_seconds -1 0); do
 	# show progress
 	let cur=$run_seconds-$each_second
 	percent=$(echo print "($cur/$run_seconds.0*100).floor" | ruby) # TODO ruby ...
@@ -170,7 +170,7 @@ for each_second in $(seq $run_seconds -2 0); do
 	# check for error yet
 	
 	# sleep
-	sleep 2
+	sleep 1
 done
 
 _hup
