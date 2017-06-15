@@ -165,7 +165,7 @@ let run_seconds=60*$run_minutes
 for each_second in $(seq $run_seconds -1 0); do
 	# show progress
 	let cur=$run_seconds-$each_second
-	percent=$(echo print "($cur/$run_seconds.0*100).floor" | ruby) # TODO ruby ...
+	percent=$(echo print "($cur/$run_seconds.0*100).floor" | ruby) # TODO ruby. either remove or add dep check
 	progress $run_seconds $cur $percent
 	# check for error yet
 	
