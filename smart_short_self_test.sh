@@ -1,6 +1,8 @@
 #!/bin/bash
+# print some relevent smart attributes, doa quick benchmark, and run a short self test
 
-# print some relevent smart attributes and run a short self test
+########################################################################################
+##### PRINTING STUFF SECTION
 
 ARGV0="$(basename $0)"
 SMARTCTL="$(which smartctl)"
@@ -87,7 +89,7 @@ echo
 echo -e "--------------------------------------------------\nSmart error log (smartctl -l xerror,error <dev>):"
 for cmd in "xerror" "error"; do
 	result=$($SMARTCTL -l $cmd $device | grep "ATA Error Count")
-	num_errors=$(echo $result | grep -o '[0-9]*$') # i was getting this for something..
+	num_errors=$(echo $result | grep -o '[0-9]*$') # TODO: i was getting this for something..
 	if [ $? -eq 0 ]; then
 		echo $result
 		$SMARTCTL -l $cmd $device | grep "Error [0-9]* occurred at"
@@ -95,6 +97,9 @@ for cmd in "xerror" "error"; do
 	unset result
 	unset cmd
 done
+
+####################################################################################
+##### SHORT SELFTEST SECTION
 
 # progress bar helper via https://gist.github.com/ivanalejandro0/9159989
 # there was also a super fancy unicode one, but this should support far more distros/OSs
@@ -168,7 +173,7 @@ for each_second in $(seq $run_seconds -1 0); do
 	percent=$(echo print "($cur/$run_seconds.0*100).floor" | ruby) # TODO ruby. either remove or add dep check
 	progress $run_seconds $cur $percent
 	# check for error yet
-	
+
 	# sleep
 	sleep 1
 done
