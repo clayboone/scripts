@@ -120,7 +120,7 @@ class xinput_mouse_speed_window(Gtk.Window):
     return float(output.split()[-1])
   
   def get_initial_accel(self):
-    cmd_line = "xinput -list-props 9 | grep 'libinput Accel Speed (279)'"
+    cmd_line = "xinput -list-props 9 | grep 'libinput Accel Speed'"
     output   = subprocess.check_output(cmd_line, shell=True)
     print(str(round(float(output.split()[-1]), 2)))
     return round(float(output.split()[-1]), 2)
