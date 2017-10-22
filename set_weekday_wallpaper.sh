@@ -24,6 +24,9 @@ template="${DEFAULT_TEMPLATE}"
 # extensions in the future. Fow now, it does nothing.
 readonly FILEXT='jpg'
 
+# Set DISPLAY for running from cronjob.
+# TODO: add this as an option
+export DISPLAY=:0.0
 
 function fatal() {
   echo "[$(date +'%Y-%m-%d %H:%M:%S%z')]: $@" >&2
