@@ -18,6 +18,7 @@ readonly WEEKDAY_WALLPAPERS_DIR="$HOME/Pictures/Wallpapers/Weekdays"
 
 # The default for ${template} in the filename
 readonly DEFAULT_TEMPLATE='blue'
+template="${DEFAULT_TEMPLATE}"
 
 # The file extension is a variable in case other templates have different
 # extensions in the future. Fow now, it does nothing.
@@ -41,20 +42,24 @@ function get_day_of_week() {
   esac
 }
 
-function get_template() {
-  echo 'blue'
-}
-
 function print_filename() {
-  echo "$(get_day_of_week)-$(get_template).${FILEXT}"
+  echo "$(get_day_of_week)-${template}.${FILEXT}"
 }
 
 function main() {
+  # Check if an optional template was specified
+  if [[ $# -gt 0 ]]; then
+    template="$1"
+  fi
+
   # Build the full path to the wallpaper
   local wallpaper_path="${WEEKDAY_WALLPAPERS_DIR}/$(print_filename)"
 
   # Set wallpaper
-  if [ -x "$(which feh)" ]; then
+  if [[ -x "$(which feh)" ]]; then
+    if [[ ! -f "${wallpaper_path}" ]]; then
+      fatal "$0: Bad wallpaper path: ${wallpaper_path}"
+    fi
     feh --bg-fill "${wallpaper_path}"
   else
     fatal "$0: Unable to find feh"
