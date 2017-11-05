@@ -20,7 +20,7 @@ case $filetype in
 		shebang_line="#!/usr/bin/env ruby"
 		;;
 	"py")
-		shebang_line="#!/usr/bin/env python"
+		shebang_line="#!/usr/bin/env python3"
 		;;
 	"sh")
 		shebang_line="#!/bin/sh"
