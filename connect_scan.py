@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import socket
 
 def is_port_up(host, port):
@@ -10,8 +11,6 @@ def is_port_up(host, port):
   try:
     ss.connect((host, port))
     ret = True
-  except:
-    pass
   finally:
     ss.close()
     return ret
@@ -35,8 +34,12 @@ def lookup(hosts=None, ports=None):
       print()
 
 if __name__ == '__main__':
-  pass
-# with open('hosts_to_scan.txt', 'r') as f:
-#   TODO: read file into hosts[]
+  with open('hosts_to_scan.txt', 'r') as f:
+    #todo: read file into hosts[]
+    pass
+
   tcp_ports = [21, 22, 23, 80, 8080, 8090, 443, 25565]
-  lookup(hosts, tcp_ports)
+  if len(hosts) > 1:
+    lookup(hosts, tcp_ports)
+  else:
+    print("No hosts specified.")
