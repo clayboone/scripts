@@ -19,7 +19,7 @@ from pynput.mouse   import Button, Controller
 def print_stderr(msg):
     print('{}'.format(msg), file=sys.stderr)
 
-def send_mouse1_event(mouse_down_delay=0.4):
+def send_mouse1_event(mouse_down_delay=0.05):
     mouse = Controller()
     mouse.press(Button.left)
     time.sleep(mouse_down_delay)
