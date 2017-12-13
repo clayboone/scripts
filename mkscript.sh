@@ -23,7 +23,7 @@ case $filetype in
 		shebang_line="#!/usr/bin/env python3"
 		;;
 	"sh")
-		shebang_line="#!/bin/sh"
+		shebang_line="#!/bin/bash"
 		;;
 	*)
 		if [ -t 0 ]; then
