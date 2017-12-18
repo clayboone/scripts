@@ -93,13 +93,16 @@ def main():
 
     # Read table from database.
     if args.watch == True:
+        # Attempt to import required module
         try:
             import watchdog
         except ImportError:
             print('You need to install the watchdog module for this feature')
             print('Try: pip install watchdog')
             return 1
-        print('hi mom')
+        # Configure watchdog to watch our file
+
+        # Watch file
     else:
         print_history(args.profile, args.count)
     return 0
