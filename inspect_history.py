@@ -72,7 +72,7 @@ def print_history(profile_name, num_rows, outfile=sys.stdout):
                     '"unixepoch"), url from urls order by last_visit_time desc')
 
     with open_sqlite3(history_filename, query=query_string) as cursor:
-        # ('2018-9-29 15:24:7', 'https://www.google.com/search?q=hi+mom')
+        # ('2017-9-9 13:20:07', 'https://www.google.com/search?q=hello+world')
         for index, row in enumerate(cursor):
             if index > num_rows - 1:
                 break
@@ -80,8 +80,11 @@ def print_history(profile_name, num_rows, outfile=sys.stdout):
             print(time, data, file=outfile)
 
 def list_chrome_profiles():
-    """Attempt to list all chrome profiles for the current user."""
-    # glob is stdlib and already imported
+    """List all sub-directories of the the chrome appdata path that contain a
+    a valid History sqlite3 databse filename and print the name of that
+    directory.
+    """
+    
     return 0
 
 def main():
