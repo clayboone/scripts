@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Parse and search your web browsing history.
 
@@ -92,7 +92,17 @@ def main():
     args = parser.parse_args()
 
     # Read table from database.
-    print_history(args.profile, args.count)
+    if args.watch == True:
+        try:
+            import watchdog
+        except ImportError:
+            print('You need to install the watchdog module for this feature')
+            print('Try: pip install watchdog')
+            return 1
+        print('hi mom')
+    else:
+        print_history(args.profile, args.count)
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())
