@@ -17,6 +17,7 @@ import sys
 import sqlite3
 import tempfile
 import shutil
+import glob
 import argparse # click not in stdlib
 
 # from urllib.parse import urlparse
@@ -78,21 +79,32 @@ def print_history(profile_name, num_rows, outfile=sys.stdout):
             time, data = row
             print(time, data, file=outfile)
 
+def list_chrome_profiles():
+    """Attempt to list all chrome profiles for the current user."""
+    # glob is stdlib and already imported
+    return 0
+
 def main():
     """Program entry point"""
     # Parse command line
     parser = argparse.ArgumentParser(
         description='Inspect your chrome web history')
-    parser.add_argument('-w', '--watch', action='store_true', default='False',
-                        help='Watch file in real-time')
+    parser.add_argument('-l', '--list-profiles',
+                        help='List all chrome profile for the current user')
     parser.add_argument('-p', '--profile', default='Default',
                         help='the Chrome profile name to inspect')
+    parser.add_argument('-w', '--watch', action='store_true', default='False',
+                        help='Watch file in real-time')
     parser.add_argument('-n', '--count', type=int, default=10,
                         help='number of entries to show')
     args = parser.parse_args()
 
+    # --list-profiles supersedes all other options
+    if args.list_profiles is True:
+        return list_chrome_profiles()
+
     # Read table from database.
-    if args.watch == True:
+    if args.watch is True:
         # Attempt to import required module
         try:
             import watchdog
