@@ -5,8 +5,8 @@
 Testing with Chrome 63 and Python 3 on Windows 10
 
 Requirements:
-    watchdog >= 0.8.3
-    pandas >= 0.21.0
+    watchdog >= 0.8.3 # note implemented yet
+    pandas >= 0.21.0 # not implemented yet
 
 Note: The requirements are totally optional. The program is made to run using
 only the standard library.
