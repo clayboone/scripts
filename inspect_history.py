@@ -5,11 +5,7 @@
 Testing with Chrome 63 and Python 3 on Windows 10
 
 Requirements:
-    watchdog >= 0.8.3 # note implemented yet
-    pandas >= 0.21.0 # not implemented yet
-
-Note: The requirements are totally optional. The program is made to run using
-only the standard library.
+    watchdog >= 0.8.3
 """
 
 import os
@@ -22,6 +18,9 @@ import argparse # click not in stdlib
 # from urllib.parse import urlparse
 from contextlib import contextmanager
 from time import sleep # pylint warns about redefining time
+
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 @contextmanager
 def open_sqlite3(filename, query=None):
@@ -62,6 +61,22 @@ def open_sqlite3(filename, query=None):
     connection.close()
     shutil.rmtree(tmp_filepath)
 
+class FileChangedEventHandler(FileSystemEventHandler):
+    """Event handler for dispatching on_modified() when a file is changed."""
+    # https://stackoverflow.com/questions/11883336/detect-file-creation-with-watchdog
+    def __init__(self, observer, filename, print_history_args):
+        """Set this object's oberserver and filename to watch"""
+        self.observer = observer
+        self.filename = filename
+        self.print_history_args = print_history_args
+
+    def on_modified(self, event):
+        """Dispatched by watchdog.events.FileSystemEventHandler when a file
+        in the observer path is modified"""
+        # print('event =', event) # uncomment to unleash hell
+        if os.path.basename(event.src_path) == os.path.basename(self.filename):
+            print_history(self.print_history_args, clear_terminal=True)
+
 def get_chrome_userdata_path():
     """Return this platform's default path to 'User Data' as a string that
     this platform understands. (eg. On Windows,
@@ -83,23 +98,17 @@ def clear_terminal_screen():
     else: # java
         print('\n' * shutil.get_terminal_size().lines, end='')
 
-def print_history(profile_name, num_rows, outfile=sys.stdout,
-                  clear_terminal=False):
+# def print_history(profile_name, num_rows, outfile=sys.stdout,
+#                   clear_terminal=False):
+def print_history(args, clear_terminal=False):
     """Read some rows of a chrome history database
 
     Args:
-        profile_name (str): Directory under get_chrome_userdata_path()
-        num_rows (int or bool): Number of most recent History entries to
-                                print. If this is a bool and True, print all
-                                entries in the database.
-        outfile (file): file object to print to
+        args (argparse.Namespace): options passed to program
         clear_terminal (bool): Whether or not to attempt to clear terminal
-
-    Note: The --all option is definitely a hack here. It's probably better to
-    just pass args to this function as it uses so many of them.
     """
     history_filename = os.path.join(get_chrome_userdata_path(),
-                                    *[profile_name, 'History'])
+                                    *[args.profile, 'History'])
 
     query_string = ('select datetime(last_visit_time/1000000-11644473600,'
                     '"unixepoch"), url from urls order by last_visit_time desc')
@@ -110,10 +119,10 @@ def print_history(profile_name, num_rows, outfile=sys.stdout,
     with open_sqlite3(history_filename, query=query_string) as cursor:
         # ('2017-9-9 13:20:07', 'https://www.google.com/search?q=hello+world')
         for index, row in enumerate(cursor):
-            if num_rows is not True and index > num_rows - 1:
+            if args.all is not True and index > args.count - 1:
                 break
             time, data = row
-            print(time, data, file=outfile)
+            print(time, data)
 
 def list_chrome_profiles():
     """List all sub-directories of the chrome 'User Data' path that contain a
@@ -150,10 +159,10 @@ def main():
     parser.add_argument('-p', '--profile',
                         default='Default',
                         help='the Chrome profile name to inspect')
-    parser.add_argument('-w', '--watch',
+    parser.add_argument('-f', '--follow',
                         action='store_true',
                         default='False',
-                        help='Watch file in real-time')
+                        help='follow profile\'s History file for changes')
     count_group = parser.add_mutually_exclusive_group()
     count_group.add_argument('-n', '--count',
                              type=int,
@@ -170,25 +179,12 @@ def main():
         return list_chrome_profiles()
 
     # Read table from database.
-    if args.watch is True:
-        # Attempt to import required module
-        try:
-            from watchdog.observers import Observer
-            from watchdog.events import FileSystemEventHandler
-        except ImportError:
-            print('You need to install the watchdog module for this feature')
-            print('Try: pip install watchdog')
-            return 1
-
-        # Should probably print a warning if --all is used along with --watch
-        # for large History files...
-
-        # Configure watchdog to watch our file
+    if args.follow is True:
         observer = Observer()
-        event_handler = FileSystemEventHandler()
+        history_filename = os.path.join(get_chrome_userdata_path(),
+                                        args.profile, 'History')
         observer.schedule(
-            # print_history(args.profile, args.count, clear_terminal=True),
-            event_handler,
+            FileChangedEventHandler(observer, history_filename, args),
             os.path.join(get_chrome_userdata_path(), args.profile))
 
         # Watch file
@@ -201,7 +197,7 @@ def main():
         observer.join()
 
     else:
-        print_history(args.profile, True if args.all is True else args.count)
+        print_history(args)
 
     return 0
 
