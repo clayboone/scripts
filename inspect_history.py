@@ -160,6 +160,9 @@ def print_history(args, clear_terminal=False):
             else:
                 print()
 
+            if args.markdown is True:
+                print() # extra line to separate links on the page
+
 def list_chrome_profiles():
     """List all sub-directories of the chrome 'User Data' path that contain a
     valid History sqlite3 database and print the profile names to stdout.
