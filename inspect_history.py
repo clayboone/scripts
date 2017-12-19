@@ -15,7 +15,6 @@ Todo:
                 little more sense, but still clears the screen, and will
                 still print out -n entries over and over if i turned the
                 screen clearing off. so the status of this is very WIP
-    * Refactor print_history() to have <= 12 branches. Pylint is picky.
 """
 
 import os
@@ -85,7 +84,7 @@ class FileChangedEventHandler(FileSystemEventHandler):
         in the observer path is modified"""
         # print('event =', event) # uncomment to unleash hell
         if os.path.basename(event.src_path) == os.path.basename(self.filename):
-            print_history(self.print_history_args, clear_terminal=True)
+            print_history(self.print_history_args)
 
 def get_chrome_userdata_path():
     """Return this platform's default path to 'User Data' as a string that
@@ -110,12 +109,11 @@ def clear_terminal_screen():
 
 # def print_history(profile_name, num_rows, outfile=sys.stdout,
 #                   clear_terminal=False):
-def print_history(args, clear_terminal=False):
+def print_history(args):
     """Read some rows of a chrome history database
 
     Args:
         args (argparse.Namespace): options passed to program
-        clear_terminal (bool): Whether or not to attempt to clear terminal
     """
     history_filename = os.path.join(
         get_chrome_userdata_path(), args.profile, 'History')
@@ -125,9 +123,6 @@ def print_history(args, clear_terminal=False):
         'datetime(last_visit_time/1000000-11644473600, "unixepoch")'
         'from urls order by last_visit_time'
     )
-
-    if clear_terminal:
-        clear_terminal_screen()
 
     with open_sqlite3(history_filename, query=query_string) as cursor:
         data = cursor.fetchall()
