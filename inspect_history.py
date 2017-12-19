@@ -190,36 +190,29 @@ def main(argv):
     parser = argparse.ArgumentParser(
         description='Inspect your chrome web history')
     parser.add_argument('-l', '--list-profiles',
-                        action='store_true',
-                        default='False',
+                        action='store_true', default='False',
                         help='List all chrome profiles for the current user')
     parser.add_argument('-p', '--profile',
                         default='Default',
                         help='the Chrome profile name to inspect')
     parser.add_argument('-t', '--time',
-                        action='store_true',
-                        default=False,
+                        action='store_true', default=False,
                         help='Print the time of the history entry')
     parser.add_argument('-u', '--url',
-                        action='store_true',
-                        default='False',
+                        action='store_true', default='False',
                         help='Also print the url of the history entry')
     parser.add_argument('-m', '--markdown',
-                        action='store_true',
-                        default=False,
+                        action='store_true', default=False,
                         help='Output in Markdown-friendly format')
     parser.add_argument('-f', '--follow',
-                        action='store_true',
-                        default='False',
+                        action='store_true', default='False',
                         help='follow profile\'s History file for changes')
     count_group = parser.add_mutually_exclusive_group()
     count_group.add_argument('-n', '--count',
-                             type=int,
-                             default=10,
+                             type=int, default=10,
                              help='number of entries to show')
     count_group.add_argument('-a', '--all',
-                             action='store_true',
-                             default=False,
+                             action='store_true', default=False,
                              help='print all entries in History file')
     args = parser.parse_args(argv[1:])
 
