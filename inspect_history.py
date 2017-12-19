@@ -6,6 +6,11 @@ Testing with Chrome 63 and Python 3 on Windows 10
 
 Requirements:
     watchdog >= 0.8.3
+
+Todo:
+    * Make a better --follow function. Right now it clears the screen then
+    prints n-history entries (default 10) in descending order. I think I'd
+    prefer this command to work more like `tail` though.
 """
 
 import os
@@ -147,7 +152,7 @@ def list_chrome_profiles():
 
     return 0 if found_valid_profile else 1
 
-def main():
+def main(argv):
     """Program entry point"""
     # Parse command line
     parser = argparse.ArgumentParser(
@@ -172,7 +177,7 @@ def main():
                              action='store_true',
                              default=False,
                              help='print all entries in History file')
-    args = parser.parse_args()
+    args = parser.parse_args(argv[1:])
 
     # --list-profiles will preempt other functionality
     if args.list_profiles is True:
@@ -202,4 +207,4 @@ def main():
     return 0
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(main(sys.argv))
