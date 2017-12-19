@@ -185,7 +185,7 @@ def main(argv):
     parser.add_argument('-l', '--list-profiles',
                         action='store_true',
                         default='False',
-                        help='List all chrome profile for the current user')
+                        help='List all chrome profiles for the current user')
     parser.add_argument('-p', '--profile',
                         default='Default',
                         help='the Chrome profile name to inspect')
