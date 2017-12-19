@@ -11,6 +11,10 @@ Todo:
     * Make a better --follow function. Right now it clears the screen then
     prints n-history entries (default 10) in descending order. I think I'd
     prefer this command to work more like `tail` though.
+      - update: we're getting closer to this. now the -f switch makes a
+                little more sense, but still clears the screen, and will
+                still print out -n entries over and over if i turned the
+                screen clearing off. so the status of this is very WIP
 """
 
 import os
