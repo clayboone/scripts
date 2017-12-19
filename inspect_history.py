@@ -15,6 +15,7 @@ Todo:
                 little more sense, but still clears the screen, and will
                 still print out -n entries over and over if i turned the
                 screen clearing off. so the status of this is very WIP
+    * Refactor print_history() to have <= 12 branches. Pylint is picky.
 """
 
 import os
@@ -130,38 +131,39 @@ def print_history(args, clear_terminal=False):
 
     with open_sqlite3(history_filename, query=query_string) as cursor:
         data = cursor.fetchall()
-        # data are a list of tuples like:
-        # ('2017-9-9 13:20:07',
-        #  'hello world - Google Search'
-        #  'https://www.google.com/search?q=hello+world')
-        for index, row in enumerate(data):
-            if args.all is not True and len(data) - args.count > index:
-                continue
 
-            if args.time is True:
-                print(row[2], end=': ')
+    # data are a list of tuples like:
+    # ('2017-9-9 13:20:07',
+    #  'hello world - Google Search'
+    #  'https://www.google.com/search?q=hello+world')
+    for index, row in enumerate(data):
+        if args.all is not True and len(data) - args.count > index:
+            continue
 
-            if len(row[1]) < 1:
-                if args.markdown is True:
-                    print('[No Title]', end='')
-                else:
-                    print('-', end=' ')
-                    if args.url is not True:
-                        # Print the url anyways since title is missing
-                        print(row[0], end=' ')
-            else:
-                if args.markdown is True:
-                    print('[' + row[1] + ']', end='')
-                else:
-                    print(row[1], end=' ')
+        if args.time is True:
+            print(row[2], end=': ')
 
-            if args.url is True or args.markdown is True:
-                print('(' + row[0] + ')')
-            else:
-                print()
-
+        if len(row[1]) < 1:
             if args.markdown is True:
-                print() # extra line to separate links on the page
+                print('[No Title]', end='')
+            else:
+                print('-', end=' ')
+                if args.url is not True:
+                    # Print the url anyways since title is missing
+                    print(row[0], end=' ')
+        else:
+            if args.markdown is True:
+                print('[' + row[1] + ']', end='')
+            else:
+                print(row[1], end=' ')
+
+        if args.url is True or args.markdown is True:
+            print('(' + row[0] + ')')
+        else:
+            print()
+
+        if args.markdown is True:
+            print() # extra line to separate links on the page
 
 def list_chrome_profiles():
     """List all sub-directories of the chrome 'User Data' path that contain a
