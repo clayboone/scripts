@@ -112,6 +112,8 @@ def list_chrome_profiles():
     userdata = get_chrome_userdata_path()
     found_valid_profile = False
 
+    # os.listdir() is significantly faster than glob.glob() and has enough
+    # functionality for what we need.
     for element in os.listdir(userdata):
         if (os.path.isdir(os.path.join(userdata, element)) and
             os.path.isfile(os.path.join(userdata, *[element, 'History']))):
