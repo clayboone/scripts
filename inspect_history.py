@@ -104,17 +104,6 @@ def get_chrome_userdata_path():
     else:
         sys.exit('Platform \'' + sys.platform + '\' is unsupported')
 
-def clear_terminal_screen():
-    """Attempt to clear terminal screen, regardless of platform"""
-    if sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
-        os.system('cls')
-    elif sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
-        os.system('clear')
-    else: # java
-        print('\n' * shutil.get_terminal_size().lines, end='')
-
-# def print_history(profile_name, num_rows, outfile=sys.stdout,
-#                   clear_terminal=False):
 def print_history(args, follow=False):
     """Read some rows of a chrome history database
 
@@ -239,7 +228,8 @@ def main(argv):
                                         args.profile, 'History')
         observer.schedule(
             FileChangedEventHandler(observer, history_filename, args),
-            os.path.join(get_chrome_userdata_path(), args.profile))
+            os.path.join(get_chrome_userdata_path(), args.profile)
+        )
 
         # Watch file
         observer.start()
