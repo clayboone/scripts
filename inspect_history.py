@@ -85,7 +85,19 @@ def clear_terminal_screen():
 
 def print_history(profile_name, num_rows, outfile=sys.stdout,
                   clear_terminal=False):
-    """Read some rows of a chrome history database"""
+    """Read some rows of a chrome history database
+
+    Args:
+        profile_name (str): Directory under get_chrome_userdata_path()
+        num_rows (int or bool): Number of most recent History entries to
+                                print. If this is a bool and True, print all
+                                entries in the database.
+        outfile (file): file object to print to
+        clear_terminal (bool): Whether or not to attempt to clear terminal
+
+    Note: The --all option is definitely a hack here. It's probably better to
+    just pass args to this function as it uses so many of them.
+    """
     history_filename = os.path.join(get_chrome_userdata_path(),
                                     *[profile_name, 'History'])
 
@@ -98,7 +110,7 @@ def print_history(profile_name, num_rows, outfile=sys.stdout,
     with open_sqlite3(history_filename, query=query_string) as cursor:
         # ('2017-9-9 13:20:07', 'https://www.google.com/search?q=hello+world')
         for index, row in enumerate(cursor):
-            if index > num_rows - 1:
+            if num_rows is not True and index > num_rows - 1:
                 break
             time, data = row
             print(time, data, file=outfile)
@@ -142,10 +154,15 @@ def main():
                         action='store_true',
                         default='False',
                         help='Watch file in real-time')
-    parser.add_argument('-n', '--count',
-                        type=int,
-                        default=10,
-                        help='number of entries to show')
+    count_group = parser.add_mutually_exclusive_group()
+    count_group.add_argument('-n', '--count',
+                             type=int,
+                             default=10,
+                             help='number of entries to show')
+    count_group.add_argument('-a', '--all',
+                             action='store_true',
+                             default=False,
+                             help='print all entries in History file')
     args = parser.parse_args()
 
     # --list-profiles will preempt other functionality
@@ -161,6 +178,9 @@ def main():
             print('You need to install the watchdog module for this feature')
             print('Try: pip install watchdog')
             return 1
+
+        # Should probably print a warning if --all is used along with --watch
+        # for large History files...
 
         # Configure watchdog to watch our file
         observer = Observer()
@@ -178,7 +198,7 @@ def main():
         observer.join()
 
     else:
-        print_history(args.profile, args.count)
+        print_history(args.profile, True if args.all is True else args.count)
 
     return 0
 
