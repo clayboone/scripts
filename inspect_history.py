@@ -142,14 +142,20 @@ def print_history(args, clear_terminal=False):
                 print(row[2], end=': ')
 
             if len(row[1]) < 1:
-                print('-', end=' ')
-                if args.url is not True:
-                    # Print the url anyways since title is missing
-                    print(row[0], end=' ')
+                if args.markdown is True:
+                    print('[No Title]', end='')
+                else:
+                    print('-', end=' ')
+                    if args.url is not True:
+                        # Print the url anyways since title is missing
+                        print(row[0], end=' ')
             else:
-                print(row[1], end=' ')
+                if args.markdown is True:
+                    print('[' + row[1] + ']', end='')
+                else:
+                    print(row[1], end=' ')
 
-            if args.url is True:
+            if args.url is True or args.markdown is True:
                 print('(' + row[0] + ')')
             else:
                 print()
@@ -197,6 +203,10 @@ def main(argv):
                         action='store_true',
                         default='False',
                         help='Also print the url of the history entry')
+    parser.add_argument('-m', '--markdown',
+                        action='store_true',
+                        default=False,
+                        help='Output in Markdown-friendly format')
     parser.add_argument('-f', '--follow',
                         action='store_true',
                         default='False',
