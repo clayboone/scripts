@@ -18,7 +18,6 @@ import sqlite3
 import tempfile
 import shutil
 import argparse # click not in stdlib
-import platform
 
 # from urllib.parse import urlparse
 from contextlib import contextmanager
@@ -67,10 +66,9 @@ def get_chrome_userdata_path():
     this platform understands. (eg. On Windows,
     'C:\\Users\\username\\App Data\\Local\\Google\\Chrome\\User Data')
     """
-    operating_system = platform.system()[:3]
     chrome_path_elements = ['Google', 'Chrome', 'User Data']
 
-    if operating_system == 'Win':
+    if sys.platform.startswith('win'):
         return os.path.join(os.getenv('LOCALAPPDATA'), *chrome_path_elements)
     else:
         raise NotImplementedError
