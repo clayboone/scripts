@@ -92,6 +92,37 @@ class FileChangedEventHandler(FileSystemEventHandler):
             if event.src_path == self.filename:
                 print_history(self.print_history_args, follow=True)
 
+class HistoryData(object):
+    """Wrapper class for a persistent data object (list of tuples).
+
+    This avoids needing either global variables or static methods because all
+    class variables are considered static.
+    """
+    __data = []
+
+    def __init__(self, data):
+        """Initialize HistoryData.__data
+
+        Args:
+            data (list): the result of the first time running a query in
+            follow mode
+        """
+        HistoryData.__data = data
+
+    @classmethod
+    def get_difference_and_append(cls, data):
+        """Return a list of tuples containing the intersection of our stored
+        __data and the data passed. Then, add that difference to our stored
+        variable for next time
+
+        Args:
+            data (list): the result of the most recent database query
+        """
+        diff = [row for row in data if row not in HistoryData.__data]
+
+        cls.__data.append(diff)
+        return diff
+
 def get_chrome_userdata_path():
     """Return this platform's default path to 'User Data' as a string that
     this platform understands. (eg. On Windows,
@@ -158,6 +189,8 @@ def print_history(args, follow=False):
 
     with open_sqlite3(history_filename, query=query_string) as cursor:
         data = cursor.fetchall()
+
+    # if follow:
 
     print_data_from_tuple(args, data)
 
