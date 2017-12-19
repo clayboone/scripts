@@ -126,12 +126,12 @@ def print_history(args, clear_terminal=False):
         # time_data is a list of tuples like:
         # ('2017-9-9 13:20:07', 'https://www.google.com/search?q=hello+world')
         for index, row in enumerate(time_data):
-            if args.all is not True:
-                if len(time_data) - args.count > index:
-                    continue
+            if args.all is not True and len(time_data) - args.count > index:
+                continue
 
             if args.time is True:
                 print(row[0], end=': ')
+                
             print(row[1])
 
 def list_chrome_profiles():
