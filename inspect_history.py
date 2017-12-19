@@ -112,24 +112,27 @@ def print_history(args, clear_terminal=False):
         args (argparse.Namespace): options passed to program
         clear_terminal (bool): Whether or not to attempt to clear terminal
     """
-    history_filename = os.path.join(get_chrome_userdata_path(),
-                                    *[args.profile, 'History'])
+    history_filename = os.path.join(
+        get_chrome_userdata_path(), args.profile, 'History')
 
     query_string = ('select datetime(last_visit_time/1000000-11644473600,'
-                    '"unixepoch"), url from urls order by last_visit_time desc')
+                    '"unixepoch"), url from urls order by last_visit_time')
 
     if clear_terminal:
         clear_terminal_screen()
 
     with open_sqlite3(history_filename, query=query_string) as cursor:
+        time_data = cursor.fetchall()
+        # time_data is a list of tuples like:
         # ('2017-9-9 13:20:07', 'https://www.google.com/search?q=hello+world')
-        for index, row in enumerate(cursor):
-            if args.all is not True and index > args.count - 1:
-                break
-            time, data = row
+        for index, row in enumerate(time_data):
+            if args.all is not True:
+                if len(time_data) - args.count > index:
+                    continue
+
             if args.time is True:
-                print(time, end=': ')
-            print(data)
+                print(row[0], end=': ')
+            print(row[1])
 
 def list_chrome_profiles():
     """List all sub-directories of the chrome 'User Data' path that contain a
