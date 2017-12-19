@@ -104,28 +104,14 @@ def get_chrome_userdata_path():
     else:
         sys.exit('Platform \'' + sys.platform + '\' is unsupported')
 
-def print_history(args, follow=False):
-    """Read some rows of a chrome history database
+def print_data_from_tuple(args, data):
+    """An accessory function to print_history()
 
-    Args:
-        args (argparse.Namespace): options passed to program
+    Print data inside tuple according to args. Data are a list of tuples like:
+    ('2017-9-9 13:20:07',
+     'hello world - Google Search'
+     'https://www.google.com/search?q=hello+world')
     """
-    history_filename = os.path.join(
-        get_chrome_userdata_path(), args.profile, 'History')
-
-    query_string = (
-        'select url, title,'
-        'datetime(last_visit_time/1000000-11644473600, "unixepoch")'
-        'from urls order by last_visit_time'
-    )
-
-    with open_sqlite3(history_filename, query=query_string) as cursor:
-        data = cursor.fetchall()
-
-    # data are a list of tuples like:
-    # ('2017-9-9 13:20:07',
-    #  'hello world - Google Search'
-    #  'https://www.google.com/search?q=hello+world')
     for index, row in enumerate(data):
         if args.all is not True and len(data) - args.count > index:
             continue
@@ -154,6 +140,26 @@ def print_history(args, follow=False):
 
         if args.markdown is True:
             print() # extra line to separate links on the page
+
+def print_history(args, follow=False):
+    """Read some rows of a chrome history database
+
+    Args:
+        args (argparse.Namespace): options passed to program
+    """
+    history_filename = os.path.join(
+        get_chrome_userdata_path(), args.profile, 'History')
+
+    query_string = (
+        'select url, title,'
+        'datetime(last_visit_time/1000000-11644473600, "unixepoch")'
+        'from urls order by last_visit_time'
+    )
+
+    with open_sqlite3(history_filename, query=query_string) as cursor:
+        data = cursor.fetchall()
+
+    print_data_from_tuple(args, data)
 
 def list_chrome_profiles():
     """List all sub-directories of the chrome 'User Data' path that contain a
