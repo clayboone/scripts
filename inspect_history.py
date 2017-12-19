@@ -115,24 +115,40 @@ def print_history(args, clear_terminal=False):
     history_filename = os.path.join(
         get_chrome_userdata_path(), args.profile, 'History')
 
-    query_string = ('select datetime(last_visit_time/1000000-11644473600,'
-                    '"unixepoch"), url from urls order by last_visit_time')
+    query_string = (
+        'select url, title,'
+        'datetime(last_visit_time/1000000-11644473600, "unixepoch")'
+        'from urls order by last_visit_time'
+    )
 
     if clear_terminal:
         clear_terminal_screen()
 
     with open_sqlite3(history_filename, query=query_string) as cursor:
-        time_data = cursor.fetchall()
-        # time_data is a list of tuples like:
-        # ('2017-9-9 13:20:07', 'https://www.google.com/search?q=hello+world')
-        for index, row in enumerate(time_data):
-            if args.all is not True and len(time_data) - args.count > index:
+        data = cursor.fetchall()
+        # data are a list of tuples like:
+        # ('2017-9-9 13:20:07',
+        #  'hello world - Google Search'
+        #  'https://www.google.com/search?q=hello+world')
+        for index, row in enumerate(data):
+            if args.all is not True and len(data) - args.count > index:
                 continue
 
             if args.time is True:
-                print(row[0], end=': ')
-                
-            print(row[1])
+                print(row[2], end=': ')
+
+            if len(row[1]) < 1:
+                print('-', end=' ')
+                if args.url is not True:
+                    # Print the url anyways since title is missing
+                    print(row[0], end=' ')
+            else:
+                print(row[1], end=' ')
+
+            if args.url is True:
+                print('(' + row[0] + ')')
+            else:
+                print()
 
 def list_chrome_profiles():
     """List all sub-directories of the chrome 'User Data' path that contain a
@@ -173,6 +189,10 @@ def main(argv):
                         action='store_true',
                         default=False,
                         help='Print the time of the history entry')
+    parser.add_argument('-u', '--url',
+                        action='store_true',
+                        default='False',
+                        help='Also print the url of the history entry')
     parser.add_argument('-f', '--follow',
                         action='store_true',
                         default='False',
