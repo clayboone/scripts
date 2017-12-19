@@ -78,13 +78,19 @@ class FileChangedEventHandler(FileSystemEventHandler):
         self.observer = observer
         self.filename = filename
         self.print_history_args = print_history_args
+        self.on_modified()
 
-    def on_modified(self, event):
+    def on_modified(self, event=None):
         """Dispatched by watchdog.events.FileSystemEventHandler when a file
         in the observer path is modified"""
         # print('event =', event) # uncomment to unleash hell
-        if os.path.basename(event.src_path) == os.path.basename(self.filename):
-            print_history(self.print_history_args)
+        if event is None:
+            # First run of a --follow comand.  Make sure print_history() is
+            # called at least once.
+            print_history(self.print_history_args, follow=True)
+        else:
+            if event.src_path == self.filename:
+                print_history(self.print_history_args, follow=True)
 
 def get_chrome_userdata_path():
     """Return this platform's default path to 'User Data' as a string that
@@ -109,7 +115,7 @@ def clear_terminal_screen():
 
 # def print_history(profile_name, num_rows, outfile=sys.stdout,
 #                   clear_terminal=False):
-def print_history(args):
+def print_history(args, follow=False):
     """Read some rows of a chrome history database
 
     Args:
