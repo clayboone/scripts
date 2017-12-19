@@ -177,10 +177,11 @@ def print_data_from_tuple(args, data):
             print() # extra line to separate links on the page
 
 def print_history(args, follow=False):
-    """Read some rows of a chrome history database
+    """Read some rows of a chrome history database.
 
     Args:
-        args (argparse.Namespace): options passed to program
+        args (argparse.Namespace): options passed to program.
+        follow (bool): were we run from follow mode
     """
     history_filename = os.path.join(
         get_chrome_userdata_path(), args.profile, 'History')
