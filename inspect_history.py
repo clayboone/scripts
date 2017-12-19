@@ -14,7 +14,6 @@ only the standard library.
 
 import os
 import sys
-import time
 import sqlite3
 import tempfile
 import shutil
@@ -22,6 +21,7 @@ import argparse # click not in stdlib
 
 # from urllib.parse import urlparse
 from contextlib import contextmanager
+from time import sleep # pylint warns about redefining time
 
 @contextmanager
 def open_sqlite3(filename, query=None):
@@ -174,6 +174,7 @@ def main():
         # Attempt to import required module
         try:
             from watchdog.observers import Observer
+            from watchdog.events import FileSystemEventHandler
         except ImportError:
             print('You need to install the watchdog module for this feature')
             print('Try: pip install watchdog')
@@ -184,15 +185,17 @@ def main():
 
         # Configure watchdog to watch our file
         observer = Observer()
+        event_handler = FileSystemEventHandler()
         observer.schedule(
-            print_history(args.profile, args.count, clear_terminal=True),
+            # print_history(args.profile, args.count, clear_terminal=True),
+            event_handler,
             os.path.join(get_chrome_userdata_path(), args.profile))
 
         # Watch file
         observer.start()
         try:
             while True:
-                time.sleep(1)
+                sleep(1)
         except KeyboardInterrupt:
             observer.stop()
         observer.join()
