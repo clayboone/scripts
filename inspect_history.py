@@ -127,7 +127,9 @@ def print_history(args, clear_terminal=False):
             if args.all is not True and index > args.count - 1:
                 break
             time, data = row
-            print(time, data)
+            if args.time is True:
+                print(time, end=': ')
+            print(data)
 
 def list_chrome_profiles():
     """List all sub-directories of the chrome 'User Data' path that contain a
@@ -142,7 +144,7 @@ def list_chrome_profiles():
     # functionality for what we need.
     for element in os.listdir(userdata):
         if (os.path.isdir(os.path.join(userdata, element)) and
-            os.path.isfile(os.path.join(userdata, *[element, 'History']))):
+            os.path.isfile(os.path.join(userdata, element, 'History'))):
             # pylint complains about the spacing above.  According to the
             # Google Python Style Guide, this is the correct way and pylint
             # is wrong.
@@ -164,6 +166,10 @@ def main(argv):
     parser.add_argument('-p', '--profile',
                         default='Default',
                         help='the Chrome profile name to inspect')
+    parser.add_argument('-t', '--time',
+                        action='store_true',
+                        default=False,
+                        help='Print the time of the history entry')
     parser.add_argument('-f', '--follow',
                         action='store_true',
                         default='False',
