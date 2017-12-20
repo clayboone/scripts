@@ -217,8 +217,7 @@ def list_chrome_profiles():
     # functionality for what we need.
     for element in os.listdir(userdata):
         if (os.path.isdir(os.path.join(userdata, element)) and
-                os.path.isfile(os.path.join(userdata, element, 'History'))):
-                # TODO: fixme somehow.. make pylint and google happy
+            os.path.isfile(os.path.join(userdata, element, 'History'))):
             # pylint complains about the spacing above.  According to the
             # Google Python Style Guide, this is the correct way and pylint
             # is wrong.
