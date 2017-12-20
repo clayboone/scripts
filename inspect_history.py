@@ -92,6 +92,41 @@ class FileChangedEventHandler(FileSystemEventHandler):
             if event.src_path == self.filename:
                 print_history(self.print_history_args, follow=True)
 
+class HistoryData(object):
+    """Wrapper class for a persistent data object (list of tuples).
+
+    This avoids needing global variables while still keeping a static variable
+    as Python doens't really have static variables for functions.
+    """
+    data = []
+    is_first_run = None
+
+    @classmethod
+    def __init__(cls, data):
+        """Initialize HistoryData.data
+
+        Args:
+            data (list): the result of the first time running a query in
+            follow mode
+        """
+        cls.is_first_run = bool(cls.is_first_run is None)
+        cls.data = data
+
+    @classmethod
+    def get_difference(cls, newdata):
+        """Return a list of tuples containing the intersection of our stored
+        data and the data passed.
+
+        Args:
+            data (list): the result of the most recent database query
+        """
+        return [row for row in newdata if row not in cls.data]
+
+    @classmethod
+    def append_data(cls, newdata):
+        """Append newdata (list) to data (list)."""
+        cls.data.append(newdata)
+
 def get_chrome_userdata_path():
     """Return this platform's default path to 'User Data' as a string that
     this platform understands. (eg. On Windows,
@@ -144,10 +179,11 @@ def print_data_from_tuple(args, data):
             print() # extra line to separate links on the page
 
 def print_history(args, follow=False):
-    """Read some rows of a chrome history database
+    """Read some rows of a chrome history database.
 
     Args:
-        args (argparse.Namespace): options passed to program
+        args (argparse.Namespace): options passed to program.
+        follow (bool): were we run from follow mode
     """
     history_filename = os.path.join(
         get_chrome_userdata_path(), args.profile, 'History')
@@ -159,9 +195,14 @@ def print_history(args, follow=False):
     )
 
     with open_sqlite3(history_filename, query=query_string) as cursor:
-        data = cursor.fetchall()
+        # data = cursor.fetchall()
+        data = HistoryData(cursor.fetchall())
 
-    print_data_from_tuple(args, data)
+    if follow and not data.is_first_run:
+        args.all = True
+        data = data.get_difference(data)
+
+    print_data_from_tuple(args, data.data)
 
 def list_chrome_profiles():
     """List all sub-directories of the chrome 'User Data' path that contain a
@@ -176,7 +217,8 @@ def list_chrome_profiles():
     # functionality for what we need.
     for element in os.listdir(userdata):
         if (os.path.isdir(os.path.join(userdata, element)) and
-            os.path.isfile(os.path.join(userdata, element, 'History'))):
+                os.path.isfile(os.path.join(userdata, element, 'History'))):
+                # TODO: fixme somehow.. make pylint and google happy
             # pylint complains about the spacing above.  According to the
             # Google Python Style Guide, this is the correct way and pylint
             # is wrong.
