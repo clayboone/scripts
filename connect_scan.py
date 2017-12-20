@@ -116,4 +116,4 @@ def main(argv):
     lookup_hosts(args.host, ports)
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+    sys.exit(main(sys.argv[1:]))
