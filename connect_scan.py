@@ -113,7 +113,7 @@ def main(argv):
     if not ports:
         print('No ports specified')
 
-    lookup_hosts(args.host, ports, verbose=args.verbose)
+    lookup_hosts(args.host, ports)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
