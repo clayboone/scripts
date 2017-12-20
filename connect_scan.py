@@ -89,7 +89,7 @@ def main(argv):
     parser.add_argument('-v', '--verbose',
                         action='count', default=0,
                         help='Enable verbose output')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     ports = [int(port) for port in args.ports.split(',') if is_int(port)]
 
