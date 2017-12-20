@@ -55,25 +55,6 @@ def resolve_name(host):
 
     return result
 
-# def lookup(hosts=None, ports=None):
-# """deleteme"""
-# if hosts is not None:
-# for host in hosts:
-#   open_ports = []
-#   try:
-#     result = socket.gethostbyname(host)
-#     if ports is not None:
-#       for port in ports:
-#         if is_port_up(result, port) == True:
-#           open_ports.append(str(port))
-#   except socket.gaierror:
-#     result = "No DNS A record found."
-#   print('{} = {}'.format(host, result), end=' ')
-#   if len(open_ports) > 0:
-#     for port in open_ports:
-#       print('[{}]'.format(port), end=' ')
-#   print()
-
 def lookup_hosts(hosts=[], ports=[], verbose=0):
     for host in hosts:
         print(host, '[' + resolve_name(host) + ']', end=': ')
