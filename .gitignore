@@ -9,6 +9,7 @@
 # and that one random vbs file
 !*.vbs
 
-# oh, and this file itself, i guess
+# git stuff
 !.gitignore
 !README.md
+!_config.yml
