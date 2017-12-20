@@ -102,14 +102,11 @@ def main(argv):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description=("Scan some ports on some hosts"))
-    parser.add_argument('host', nargs='+',
-                        help='hostname to scan')
-    parser.add_argument('-p', '--ports',
-                        type=str, default='80,443',
+    parser.add_argument('host', nargs='+', help='hostname to scan')
+    parser.add_argument('-p', '--ports', type=str, default='80,443',
                         help='Comma separated list of ports to scan')
-    parser.add_argument('-v', '--verbose',
-                        action='count', default=0,
-                        help='Enable verbose output')
+    # parser.add_argument('-v', '--verbose', action='count', default=0,
+    #                     help='Enable verbose output')
     args = parser.parse_args(argv)
 
     ports = [int(port) for port in args.ports.split(',') if is_portnum(port)]
