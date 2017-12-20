@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""connect_scan.py
 
+Port scan some hosts by attempting to establish a TCP connection.
+"""
 import sys
 import argparse
 import socket
@@ -21,7 +25,7 @@ def open_tcp_connection(host, port):
 
     try:
         sock.connect((host, port))
-    except (IOError, OSError) as error:
+    except OSError:
         # Closed ports will time out, no need to re-raise
         sock = False
 
@@ -50,26 +54,39 @@ def resolve_name(host):
     """
     try:
         result = socket.gethostbyname(host)
-    except socket.gaierror as error:
+    except socket.gaierror:
         result = 'Unable to resolve host ' + host
 
     return result
 
-def lookup_hosts(hosts=[], ports=[], verbose=0):
+def lookup_hosts(hosts, ports):
+    """Resolve a list of hosts by name to IP addresses and try connect
+    to them on TCP ports.
+
+    Args:
+        hosts (list): The hosts to connect to.
+        ports (list): The ports on hosts to connect to.
+    """
     for host in hosts:
         print(host, '[' + resolve_name(host) + ']', end=': ')
 
         for port in ports:
-            if (is_port_up(host, port)):
+            if is_port_up(host, port):
                 print('[' + str(port) + ']', end=' ')
 
         print()
 
-def is_int(input):
-    """Return True if input can be represented as a positive integer."""
+def is_int(input_str):
+    """Return True if input can be represented as a positive integer.
+
+    Args:
+        input_str (str): an input
+
+    Return (bool): True if input_str is positive integer; False otherwise
+    """
     try:
-        int(input)
-        if int(input) < 0:
+        int(input_str)
+        if int(input_str) < 0:
             raise ValueError
     except ValueError:
         return False
