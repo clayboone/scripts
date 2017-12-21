@@ -64,7 +64,7 @@ def get_public_ip(version=6):
         sock.send(b'GET / HTTP/1.1\r\nHost: icanhazip.com\r\n\r\n')
         message = sock.recv(2048)
 
-    print(str(message))
+    result = str(message, encoding='utf-8').splitlines()[-1]
     return result
 
 def main(argv):
