@@ -10,7 +10,6 @@ Requires:
 """
 
 import sys
-import argparse
 import time
 
 from daemonize      import Daemonize
