@@ -28,6 +28,7 @@ def open_tcp_connection(host, port, version=6):
     Args:
         host (str): The address of the host to connect to.
         port (int): The port to connect to on host.
+        version (int): Internet Protocol version to use.
 
     Yield (socket.socket) on success, False otherwise
     """
@@ -46,18 +47,13 @@ def open_tcp_connection(host, port, version=6):
         sock.close()
 
 def get_public_ip(version=6):
-    """
-    Return the outside-global IPv4 address of this host as a string using
-    the HTTPS flavor of httpbin.org. On error, return None.
+    """Return the outside IP address of this host as a string using the
+    icanhazip.com service.
 
-    TODO:
-        * Change over to using icanhazip instead of httpbin. httpbin won't
-          support IPv6 at this time because it's deployed on Heroku and they
-          don't support IPv6
-        * Change to normal sockets rather than using requests. Requests makes
-          doing web requests super easy, but forcing IPv4 super hard.
-        * Requests is also very slow and adds about half to three-quarters
-          of second to the scripts runtime.
+    Args:
+        version (int): The Internet Protocol version number to find.
+
+    Return (str or None): An IP address string.
     """
     result = None
     with open_tcp_connection('icanhazip.com', 80, version) as sock:
