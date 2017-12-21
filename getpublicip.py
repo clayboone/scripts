@@ -94,9 +94,9 @@ def main(argv):
             if address:
                 break
         else:
-            address = 'service unreachable (auto)'
+            address = args.failure_message
     else:
-        address = get_public_ip(args.ip_version) or 'service unreachable'
+        address = get_public_ip(args.ip_version) or args.failure_message
 
     print('{}'.format(address))
 
