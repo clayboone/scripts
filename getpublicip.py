@@ -18,9 +18,34 @@ sons:
 
 import sys
 import argparse
-import requests
+import socket
+from contextlib import contextmanager
 
-def get_public_ip(version=4):
+@contextmanager
+def open_tcp_connection(host, port, version=6):
+    """Attempt to connect to host on port over TCP.
+
+    Args:
+        host (str): The address of the host to connect to.
+        port (int): The port to connect to on host.
+
+    Yield (socket.socket) on success, False otherwise
+    """
+    if version == 4:
+        sock = socket.socket(family=socket.AF_INET)
+    else:
+        sock = socket.socket(family=socket.AF_INET6)
+
+    try:
+        sock.connect((host, port))
+    except OSError:
+        sock = False
+
+    if sock:
+        yield sock
+        sock.close()
+
+def get_public_ip(version=6):
     """
     Return the outside-global IPv4 address of this host as a string using
     the HTTPS flavor of httpbin.org. On error, return None.
@@ -29,18 +54,17 @@ def get_public_ip(version=4):
         * Change over to using icanhazip instead of httpbin. httpbin won't
           support IPv6 at this time because it's deployed on Heroku and they
           don't support IPv6
+        * Change to normal sockets rather than using requests. Requests makes
+          doing web requests super easy, but forcing IPv4 super hard.
+        * Requests is also very slow and adds about half to three-quarters
+          of second to the scripts runtime.
     """
     result = None
+    with open_tcp_connection('icanhazip.com', 80, version) as sock:
+        sock.send(b'GET / HTTP/1.1\r\nHost: icanhazip.com\r\n\r\n')
+        message = sock.recv(2048)
 
-    try:
-        request = requests.get('https://httpbin.org/ip')
-    except (requests.ConnectionError, requests.ConnectTimeout):
-        pass
-
-    if request.status_code == 200:
-        for key, val in request.json().items():
-            if key == 'origin':
-                result = val
+    print(str(message))
     return result
 
 def main(argv):
