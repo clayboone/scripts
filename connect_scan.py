@@ -3,12 +3,16 @@
 """connect_scan.py
 
 Port scan some hosts by attempting to establish a TCP connection.
+
+Requirements:
+    pygments >= 2.2.0
 """
 import sys
 import argparse
 import socket
-
 from contextlib import contextmanager
+
+import pygments
 
 @contextmanager
 def open_tcp_connection(host, port):
@@ -76,7 +80,7 @@ def lookup_hosts(hosts, ports):
 
         print()
 
-def is_int(input_str):
+def is_portnum(input_str):
     """Return True if input can be represented as a positive integer.
 
     Args:
@@ -86,7 +90,7 @@ def is_int(input_str):
     """
     try:
         int(input_str)
-        if int(input_str) < 0:
+        if int(input_str) < 0 or int(input_str) > 65535:
             raise ValueError
     except ValueError:
         return False
@@ -98,17 +102,14 @@ def main(argv):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description=("Scan some ports on some hosts"))
-    parser.add_argument('host', nargs='+',
-                        help='hostname to scan')
-    parser.add_argument('-p', '--ports',
-                        type=str, default='80,443',
+    parser.add_argument('host', nargs='+', help='hostname to scan')
+    parser.add_argument('-p', '--ports', type=str, default='80,443',
                         help='Comma separated list of ports to scan')
-    parser.add_argument('-v', '--verbose',
-                        action='count', default=0,
-                        help='Enable verbose output')
+    # parser.add_argument('-v', '--verbose', action='count', default=0,
+    #                     help='Enable verbose output')
     args = parser.parse_args(argv)
 
-    ports = [int(port) for port in args.ports.split(',') if is_int(port)]
+    ports = [int(port) for port in args.ports.split(',') if is_portnum(port)]
 
     if not ports:
         print('No ports specified')
