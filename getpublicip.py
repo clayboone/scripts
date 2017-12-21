@@ -24,6 +24,11 @@ def get_public_ip(version=4):
     """
     Return the outside-global IPv4 address of this host as a string using
     the HTTPS flavor of httpbin.org. On error, return None.
+
+    TODO:
+        * Change over to using icanhazip instead of httpbin. httpbin won't
+          support IPv6 at this time because it's deployed on Heroku and they
+          don't support IPv6
     """
     result = None
 
@@ -46,20 +51,21 @@ def main(argv):
     """
     parser = argparse.ArgumentParser(
         description='Print the public IP address of this host',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        epilog=('If --auto is specified, first attempt to retrieve IPv6 '
+                'address. Then fall back to IPv4 if that fails. (default=auto)')
+        )
     version_group = parser.add_mutually_exclusive_group()
     version_group.add_argument(
         '-a', '--auto', action='store_const', const=0, dest='ip_version',
-        default=0,
-        help='')
+        default=0)
     version_group.add_argument(
-        '-4', action='store_const', const=4, dest='ip_version')
+        '-4', '--ipv4', action='store_const', const=4, dest='ip_version')
     version_group.add_argument(
-        '-6', action='store_const', const=6, dest='ip_version')
+        '-6', '--ipv6', action='store_const', const=6, dest='ip_version')
     args = parser.parse_args(argv)
 
-    print(args)
-    # print('{}'.format(get_public_ip(args.ip_version) or 'service unreachable'))
+    # print(args)
+    print('{}'.format(get_public_ip(args.ip_version) or 'service unreachable'))
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
