@@ -4,16 +4,6 @@ This module finds the outside IP address of the current host.
 
 It's intended to be used as an i3blocks command, so at most this program
 should output exactly one line to stdout.
-
-I've also decided to print 'service unreachable' instead of '0.0.0.0' for both
-IPv4 and IPv6. It's lowercase becaseu the default i3 font doesn't like upper-
-case characters on my screen. And it's english rather than zeros for two rea-
-sons:
-    * 0.0.0.0 is ambiguous because it's the 'any' address in most config files
-    * I don't know the IPv6 equivalent to IPv4's 0.0.0.0; it's probably [::],
-      or somehting similar, which is a far enough departure from a typical-
-      looking v6 address that it doesn't really make sense to have in the i3-
-      blocks status bar area.
 """
 
 import sys
