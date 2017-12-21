@@ -82,6 +82,8 @@ def main(argv):
         '-4', '--ipv4', action='store_const', const=4, dest='ip_version')
     version_group.add_argument(
         '-6', '--ipv6', action='store_const', const=6, dest='ip_version')
+    parser.add_argument(
+        '-f', '--failure_message', type=str, default='service unreachable')
     args = parser.parse_args(argv)
 
     if args.ip_version == 0:
