@@ -133,13 +133,15 @@ def get_chrome_userdata_path():
     'C:\\Users\\username\\App Data\\Local\\Google\\Chrome\\User Data')
     """
     if sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
+        environmant_name = 'LOCALAPPDATA'
         chrome_path_elements = ['Google', 'Chrome', 'User Data']
-        return os.path.join(os.getenv('LOCALAPPDATA'), *chrome_path_elements)
     elif sys.platform.startswith('linux'):
+        environmant_name = 'HOME'
         chrome_path_elements = ['.config', 'google-chrome']
-        return os.path.join(os.getenv('HOME'), *chrome_path_elements)
     else: # haven't tested 'darwin' or 'java' yet
         sys.exit('Platform \'' + sys.platform + '\' is unsupported')
+
+    return os.path.join(os.getenv(environmant_name), *chrome_path_elements)
 
 def print_data_from_tuple(args, data):
     """An accessory function to print_history()
