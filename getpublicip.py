@@ -64,8 +64,17 @@ def main(argv):
         '-6', '--ipv6', action='store_const', const=6, dest='ip_version')
     args = parser.parse_args(argv)
 
-    # print(args)
-    print('{}'.format(get_public_ip(args.ip_version) or 'service unreachable'))
+    if args.ip_version == 0:
+        for version in [6, 4]:
+            address = get_public_ip(version)
+            if address:
+                break
+        else:
+            address = 'service unreachable (auto)'
+    else:
+        address = get_public_ip(args.ip_version) or 'service unreachable'
+
+    print('{}'.format(address))
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
