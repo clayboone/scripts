@@ -42,8 +42,9 @@ def open_tcp_connection(host, port, version=6):
     except OSError:
         sock = False
 
+    yield sock
+
     if sock:
-        yield sock
         sock.close()
 
 def get_public_ip(version=6):
@@ -55,8 +56,9 @@ def get_public_ip(version=6):
 
     Return (str or None): An IP address string.
     """
-    result = None
     with open_tcp_connection('icanhazip.com', 80, version) as sock:
+        if not sock:
+            return None
         sock.send(b'GET / HTTP/1.1\r\nHost: icanhazip.com\r\n\r\n')
         message = sock.recv(2048)
 
