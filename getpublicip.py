@@ -64,7 +64,8 @@ def main(argv):
     parser = argparse.ArgumentParser(
         description='Print the public IP address of this host',
         epilog=('If --auto is specified, first attempt to retrieve IPv6 '
-                'address. Then fall back to IPv4 if that fails. (default=auto)')
+                'address. Then fall back to IPv4 if that fails. If no option '
+                'is specified, --auto is assumed.')
         )
     version_group = parser.add_mutually_exclusive_group()
     version_group.add_argument(
