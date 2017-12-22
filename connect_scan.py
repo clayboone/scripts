@@ -12,7 +12,7 @@ import argparse
 import socket
 from contextlib import contextmanager
 
-import pygments
+# import pygments
 
 @contextmanager
 def open_tcp_connection(host, port, timeout=0.4):
