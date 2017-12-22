@@ -19,56 +19,14 @@ Todo:
 
 import os
 import sys
-import sqlite3
-import tempfile
-import shutil
-import argparse # click not in stdlib
 
-# from urllib.parse import urlparse
-from contextlib import contextmanager
-from time import sleep # pylint warns about redefining time
+import argparse
+from time import sleep
+
+import sqlite_tools
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-
-@contextmanager
-def open_sqlite3(filename, query=None):
-    """Context manager for reading an sqlite3 database while it's in use.
-
-    Args:
-        filename (str): The filename of the databse which we want to open
-        query (str): The query to run on that databse (optional)
-
-    Yield:
-        if query is None:
-            A connection object on which the caller can run queries and
-            manage cursors themselves.
-        else:
-            A cursor object with the result of query.
-    """
-    # "Open..."
-    tmp_filepath = tempfile.mkdtemp()
-    tmp_filename = os.path.join(tmp_filepath, os.path.basename(filename))
-
-    try:
-        shutil.copyfile(filename, tmp_filename)
-    except (IOError, shutil.SameFileError) as error:
-        # Consider this unrecoverable for now.
-        shutil.rmtree(tmp_filepath)
-        sys.exit(error)
-
-    connection = sqlite3.connect(tmp_filename)
-
-    # "Yield..."
-    if query is None:
-        yield connection
-    else:
-        cursor = connection.execute(query)
-        yield cursor
-
-    # "Close..."
-    connection.close()
-    shutil.rmtree(tmp_filepath)
 
 class FileChangedEventHandler(FileSystemEventHandler):
     """Event handler for dispatching on_modified() when a file is changed."""
@@ -196,7 +154,8 @@ def print_history(args, follow=False):
         'from urls order by last_visit_time'
     )
 
-    with open_sqlite3(history_filename, query=query_string) as cursor:
+    with sqlite_tools.open_sqlite3(
+        history_filename, query=query_string) as cursor:
         # data = cursor.fetchall()
         data = HistoryData(cursor.fetchall())
 
