@@ -15,7 +15,7 @@ from contextlib import contextmanager
 import pygments
 
 @contextmanager
-def open_tcp_connection(host, port):
+def open_tcp_connection(host, port, timeout=0.4):
     """Attempt to connect to host on port over TCP.
 
     Args:
@@ -25,7 +25,7 @@ def open_tcp_connection(host, port):
     Yield (socket.socket) on success, False otherwise
     """
     sock = socket.socket()
-    sock.settimeout(0.4)
+    sock.settimeout(timeout)
 
     try:
         sock.connect((host, port))
