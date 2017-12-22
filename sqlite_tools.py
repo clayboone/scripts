@@ -6,10 +6,11 @@ Accessory functions for working with sqlite3 files and objects in various
 scenarios.
 """
 
-import sqlite3
-import tempfile
-import shutil
 import os
+import shutil
+import tempfile
+import sqlite3
+
 from contextlib import contextmanager
 
 
