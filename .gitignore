@@ -5,6 +5,7 @@
 !*.sh
 !*.py
 !*.rb
+testing.py
 
 # and that one random vbs file
 !*.vbs
