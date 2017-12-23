@@ -23,7 +23,7 @@ import sys
 import argparse
 from time import sleep
 
-from sqlite_tools import open_sqlite3
+from sqlite_tools import open_temp_sqlite3
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -154,7 +154,7 @@ def print_history(args, follow=False):
         'from urls order by last_visit_time'
     )
 
-    with open_sqlite3(history_filename, query=query_string) as cursor:
+    with open_temp_sqlite3(history_filename, query=query_string) as cursor:
         # data = cursor.fetchall()
         data = HistoryData(cursor.fetchall())
 

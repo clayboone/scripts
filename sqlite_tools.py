@@ -15,7 +15,7 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def open_sqlite3(filename, query=None):
+def open_temp_sqlite3(filename, query=None):
     """Context manager for reading an sqlite3 database while it's in use.
 
     Args:
@@ -38,7 +38,7 @@ def open_sqlite3(filename, query=None):
     except (IOError, shutil.SameFileError) as error:
         # Consider this unrecoverable for now.
         shutil.rmtree(tmp_filepath)
-        sys.exit(error)
+        raise error
 
     connection = sqlite3.connect(tmp_filename)
 
