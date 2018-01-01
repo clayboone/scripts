@@ -6,4 +6,3 @@ for i in {a..z}; do
 		echo Drive /dev/sd$i is $sernum
 	fi
 done
-
