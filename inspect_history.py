@@ -23,10 +23,10 @@ import sys
 import argparse
 from time import sleep
 
-from sqlite_tools import open_temp_sqlite3
-
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
+from sqlite_tools import open_temp_sqlite3
 
 class FileChangedEventHandler(FileSystemEventHandler):
     """Event handler for dispatching on_modified() when a file is changed."""
