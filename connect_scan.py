@@ -3,16 +3,11 @@
 """connect_scan.py
 
 Port scan some hosts by attempting to establish a TCP connection.
-
-Requirements:
-    pygments >= 2.2.0
 """
 import sys
 import argparse
 import socket
 from contextlib import contextmanager
-
-# import pygments
 
 @contextmanager
 def open_tcp_connection(host, port, timeout=0.4):
@@ -63,7 +58,7 @@ def resolve_name(host):
 
     return result
 
-def lookup_hosts(hosts, ports):
+def lookup_hosts(hosts, ports, resolve_names=True):
     """Resolve a list of hosts by name to IP addresses and try connect
     to them on TCP ports.
 
@@ -72,7 +67,8 @@ def lookup_hosts(hosts, ports):
         ports (list): The ports on hosts to connect to.
     """
     for host in hosts:
-        print(host, '[' + resolve_name(host) + ']', end=': ')
+        if resolve_names:
+            print(host, '[' + resolve_name(host) + ']', end=': ')
 
         for port in ports:
             if is_port_up(host, port):
@@ -105,8 +101,8 @@ def main(argv):
     parser.add_argument('host', nargs='+', help='hostname to scan')
     parser.add_argument('-p', '--ports', type=str, default='80,443',
                         help='Comma separated list of ports to scan')
-    # parser.add_argument('-v', '--verbose', action='count', default=0,
-    #                     help='Enable verbose output')
+    parser.add_argument('--no-dns', '-n', action='store_false', default=True,
+                        help='Do not resolve host names using DNS')
     args = parser.parse_args(argv)
 
     ports = [int(port) for port in args.ports.split(',') if is_portnum(port)]
@@ -114,7 +110,7 @@ def main(argv):
     if not ports:
         print('No ports specified')
 
-    lookup_hosts(args.host, ports)
+    lookup_hosts(args.host, ports, resolve_names=args.no_dns)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
