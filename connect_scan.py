@@ -7,6 +7,7 @@ Port scan some hosts by attempting to establish a TCP connection.
 import sys
 import argparse
 import socket
+import random
 from contextlib import contextmanager
 
 @contextmanager
@@ -117,11 +118,13 @@ def main(argv):
                 if _ not in ports:
                     ports.append(_)
         else:
-            if is_portnum(port) and port not in ports:
+            if is_portnum(port) and int(port) not in ports:
                 ports.append(int(port))
 
     if not ports:
         print('No ports specified')
+
+    random.shuffle(ports)
 
     # Scan hosts
     lookup_hosts(args.host, ports, resolve_names=args.no_dns)
