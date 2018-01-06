@@ -3,6 +3,10 @@
 """connect_scan.py
 
 Port scan some hosts by attempting to establish a TCP connection.
+
+TODO:
+    Add threading, scapy, or both. This takes way too long with lots of ports
+    or hosts because of the "long" timeout and sequential scan.
 """
 import sys
 import argparse
