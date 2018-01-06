@@ -114,11 +114,11 @@ def main(argv):
             if not is_portnum(low) or not is_portnum(high):
                 continue
             for _ in range(int(low), int(high) + 1):
-                ports.append(_)
+                if _ not in ports:
+                    ports.append(_)
         else:
-            if is_portnum(port):
-                ports.append(port)
-
+            if is_portnum(port) and port not in ports:
+                ports.append(int(port))
 
     if not ports:
         print('No ports specified')
