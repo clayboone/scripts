@@ -95,6 +95,7 @@ def is_portnum(input_str):
 
 def main(argv):
     """Program entry point"""
+    # Parse options
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         description=("Scan some ports on some hosts"))
@@ -105,11 +106,24 @@ def main(argv):
                         help='Do not resolve host names using DNS')
     args = parser.parse_args(argv)
 
-    ports = [int(port) for port in args.ports.split(',') if is_portnum(port)]
+    # Parse ports
+    ports = []
+    for port in args.ports.split(','):
+        if '-' in port:
+            low, *_, high = port.split('-')
+            if not is_portnum(low) or not is_portnum(high):
+                continue
+            for _ in range(int(low), int(high) + 1):
+                ports.append(_)
+        else:
+            if is_portnum(port):
+                ports.append(port)
+
 
     if not ports:
         print('No ports specified')
 
+    # Scan hosts
     lookup_hosts(args.host, ports, resolve_names=args.no_dns)
 
 if __name__ == '__main__':
