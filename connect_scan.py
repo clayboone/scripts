@@ -127,6 +127,7 @@ def main(argv):
 
     if not ports:
         print('No ports specified')
+        sys.exit(1)
 
     random.shuffle(ports)
 
