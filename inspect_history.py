@@ -85,6 +85,14 @@ class HistoryData(object):
         """Append newdata (list) to data (list)."""
         cls.data.append(newdata)
 
+
+    # ██    ██ ███████ ███████ ██████  ██████   █████  ████████  █████
+    # ██    ██ ██      ██      ██   ██ ██   ██ ██   ██    ██    ██   ██
+    # ██    ██ ███████ █████   ██████  ██   ██ ███████    ██    ███████
+    # ██    ██      ██ ██      ██   ██ ██   ██ ██   ██    ██    ██   ██
+    #  ██████  ███████ ███████ ██   ██ ██████  ██   ██    ██    ██   ██
+
+    
 def get_chrome_userdata_path():
     """Return this platform's default path to 'User Data' as a string that
     this platform understands. (eg. On Windows,
@@ -138,6 +146,15 @@ def print_data_from_tuple(args, data):
         if args.markdown is True:
             print() # extra line to separate links on the page
 
+
+    # ██████  ██████  ██ ███    ██ ████████
+    # ██   ██ ██   ██ ██ ████   ██    ██
+    # ██████  ██████  ██ ██ ██  ██    ██
+    # ██      ██   ██ ██ ██  ██ ██    ██
+    # ██      ██   ██ ██ ██   ████    ██
+
+
+
 def print_history(args, follow=False):
     """Read some rows of a chrome history database.
 
@@ -186,6 +203,15 @@ def list_chrome_profiles():
                 found_valid_profile = True
 
     return 0 if found_valid_profile else 1
+
+
+    # ███    ███  █████  ██ ███    ██
+    # ████  ████ ██   ██ ██ ████   ██
+    # ██ ████ ██ ███████ ██ ██ ██  ██
+    # ██  ██  ██ ██   ██ ██ ██  ██ ██
+    # ██      ██ ██   ██ ██ ██   ████
+
+
 
 def main(argv):
     """Program entry point"""
