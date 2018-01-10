@@ -61,7 +61,7 @@ import argparse
 import json
 import requests
 
-class SomaChannel(object):
+class SomaChannel(dict):
     def __init__(self):
         pass
 
