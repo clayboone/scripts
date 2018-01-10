@@ -28,6 +28,16 @@ from watchdog.events import FileSystemEventHandler
 
 from sqlite_tools import open_temp_sqlite3
 
+
+
+# ██     ██  █████  ████████  ██████ ██   ██ ██████   ██████   ██████
+# ██     ██ ██   ██    ██    ██      ██   ██ ██   ██ ██    ██ ██
+# ██  █  ██ ███████    ██    ██      ███████ ██   ██ ██    ██ ██   ███
+# ██ ███ ██ ██   ██    ██    ██      ██   ██ ██   ██ ██    ██ ██    ██
+#  ███ ███  ██   ██    ██     ██████ ██   ██ ██████   ██████   ██████
+
+
+
 class FileChangedEventHandler(FileSystemEventHandler):
     """Event handler for dispatching on_modified() when a file is changed."""
     # https://stackoverflow.com/questions/11883336/detect-file-creation-with-watchdog
@@ -92,7 +102,7 @@ class HistoryData(object):
     # ██    ██      ██ ██      ██   ██ ██   ██ ██   ██    ██    ██   ██
     #  ██████  ███████ ███████ ██   ██ ██████  ██   ██    ██    ██   ██
 
-    
+
 def get_chrome_userdata_path():
     """Return this platform's default path to 'User Data' as a string that
     this platform understands. (eg. On Windows,
