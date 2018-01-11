@@ -6,6 +6,7 @@ Requires:
     https://pypi.python.org/pypi/pynput
 """
 
+import sys
 import time
 from pynput.mouse   import Button, Controller
 
@@ -16,5 +17,9 @@ def send_mouse1_event(mouse_down_delay=0.05):
     time.sleep(mouse_down_delay)
     mouse.release(Button.left)
 
-if __name__ == '__main__':
+def main(argv):
     send_mouse1_event()
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))
