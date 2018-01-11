@@ -29,13 +29,11 @@ from watchdog.events import FileSystemEventHandler
 from sqlite_tools import open_temp_sqlite3
 
 
-
 # ██     ██  █████  ████████  ██████ ██   ██ ██████   ██████   ██████
 # ██     ██ ██   ██    ██    ██      ██   ██ ██   ██ ██    ██ ██
 # ██  █  ██ ███████    ██    ██      ███████ ██   ██ ██    ██ ██   ███
 # ██ ███ ██ ██   ██    ██    ██      ██   ██ ██   ██ ██    ██ ██    ██
 #  ███ ███  ██   ██    ██     ██████ ██   ██ ██████   ██████   ██████
-
 
 
 class FileChangedEventHandler(FileSystemEventHandler):
@@ -164,7 +162,6 @@ def print_data_from_tuple(args, data):
     # ██      ██   ██ ██ ██   ████    ██
 
 
-
 def print_history(args, follow=False):
     """Read some rows of a chrome history database.
 
@@ -220,7 +217,6 @@ def list_chrome_profiles():
     # ██ ████ ██ ███████ ██ ██ ██  ██
     # ██  ██  ██ ██   ██ ██ ██  ██ ██
     # ██      ██ ██   ██ ██ ██   ████
-
 
 
 def main(argv):
