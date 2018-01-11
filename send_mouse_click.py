@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """
-GMouseClicker
-
-Click the mouse repeatedly until stopped.
+send_mouse_click.py
 
 Requires:
     https://pypi.python.org/pypi/pynput
