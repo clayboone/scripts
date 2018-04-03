@@ -32,8 +32,7 @@ case "$x" in
 		break
 		;;
 	*)
-		# search (for now)
-		echo input was \""$x"\"
-		exec chrome "https://google.com/search?q=$x"
+		# just search (for now)
+		[ -z "$x" ] || exec chrome "https://google.com/search?q=$x"
 esac
 
