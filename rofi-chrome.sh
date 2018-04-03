@@ -5,7 +5,9 @@
 x=`cat <<EOF | rofi -dmenu -i -p "Chrome: "
 GMail
 Google Inbox
+Google Drive
 Google Calendar
+Google Photos
 Google Keep
 GitHub
 Reddit
@@ -15,6 +17,14 @@ EOF
 case "$x" in
 	"GMail")
 		exec chrome "https://gmail.com"
+		break
+		;;
+	"Google Drive")
+		exec chrome "https://drive.google.com"
+		break
+		;;
+	"Google Photos")
+		exec chrome "https://photos.google.com"
 		break
 		;;
 	"Google Inbox")
