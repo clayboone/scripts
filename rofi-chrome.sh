@@ -7,6 +7,7 @@ GMail
 Google Inbox
 Google Calendar
 Google Keep
+GitHub
 Reddit
 EOF
 `
@@ -30,6 +31,10 @@ case "$x" in
 		;;
 	"Google Keep")
 		exec chrome "https://keep.google.com"
+		break
+		;;
+	"GitHub")
+		exec chrome "https://github.com"
 		break
 		;;
 	*)
