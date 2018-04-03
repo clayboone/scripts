@@ -6,6 +6,7 @@ x=`cat <<EOF | rofi -dmenu -i -p "Chrome: "
 GMail
 Google Inbox
 Google Calendar
+Google Keep
 Reddit
 EOF
 `
