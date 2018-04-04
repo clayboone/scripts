@@ -12,10 +12,24 @@ Google Keep
 GitHub
 WakaTime
 Reddit
+Sheets: Places
 EOF
 `
+# Sheets: Visa
+# Sheets: iPad
+# Sheets: VPN
+# Sheets: Sleep
 
+# when i get around to doing this in python:
+# check for the presence of "://" in the input and launch that site instead
+# of searching for it.
+# also, add some aliases for different search engines?
 case "$x" in
+	"Sheets: Places")
+		exec chrome "https://sheets.google.com"
+		# need a good way to make these spreadsheet addresses not visible on github..
+		break
+		;;
 	"GMail")
 		exec chrome "https://gmail.com"
 		break
