@@ -10,6 +10,7 @@ Google Calendar
 Google Photos
 Google Keep
 GitHub
+WakaTime
 Reddit
 EOF
 `
@@ -17,6 +18,10 @@ EOF
 case "$x" in
 	"GMail")
 		exec chrome "https://gmail.com"
+		break
+		;;
+	"WakaTime")
+		exec chrome "https://wakatime.com"
 		break
 		;;
 	"Google Drive")
