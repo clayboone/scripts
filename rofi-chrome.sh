@@ -4,17 +4,19 @@
 
 x=`cat <<EOF | rofi -dmenu -i -p "Chrome: "
 GMail
+GitHub
+WakaTime
+Reddit
+Twitter
 Google Inbox
 Google Drive
 Google Calendar
 Google Photos
 Google Keep
-GitHub
-WakaTime
-Reddit
-Sheets: Places
+Google Sheets
 EOF
 `
+# Sheets: Places
 # Sheets: Visa
 # Sheets: iPad
 # Sheets: VPN
@@ -25,9 +27,14 @@ EOF
 # of searching for it.
 # also, add some aliases for different search engines?
 case "$x" in
-	"Sheets: Places")
+	#"Sheets: Places")
+	"Google Sheets")
 		exec chrome "https://sheets.google.com"
 		# need a good way to make these spreadsheet addresses not visible on github..
+		break
+		;;
+	"Twitter")
+		exec chrome "https://twitter.com"
 		break
 		;;
 	"GMail")
