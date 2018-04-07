@@ -10,6 +10,7 @@ Reddit
 Twitter
 YouTube
 Netflix
+Hastebin
 Google Inbox
 Google Drive
 Google Calendar
@@ -29,6 +30,10 @@ EOF
 # of searching for it.
 # also, add some aliases for different search engines?
 case "$x" in
+	"Hastebin")
+		exec chrome "https://hastebin.com"
+		break
+		;;
 	"YouTube")
 		exec chrome "https://youtube.com"
 		break
