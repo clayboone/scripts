@@ -8,6 +8,8 @@ GitHub
 WakaTime
 Reddit
 Twitter
+YouTube
+Netflix
 Google Inbox
 Google Drive
 Google Calendar
@@ -27,6 +29,14 @@ EOF
 # of searching for it.
 # also, add some aliases for different search engines?
 case "$x" in
+	"YouTube")
+		exec chrome "https://youtube.com"
+		break
+		;;
+	"Netflix")
+		exec chrome "https://www.netflix.com"
+		break
+		;;
 	#"Sheets: Places")
 	"Google Sheets")
 		exec chrome "https://sheets.google.com"
