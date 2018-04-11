@@ -33,8 +33,12 @@ if [ -z "$filename" ]; then
 fi
 
 # Move to a tmpfs/ramdisk
-mv "${filename}" "${DESTDIR}/${filename}" || \ 
+mv "${filename}" "${DESTDIR}/${filename}"
+if [ $? -ne 0 ]; then
+	# this check is kinda lame. BSD `sh` reads this particular
+	# "return 0" as a failure. i'm not sure why...
 	fatal "Failed to move ${filename} to ${DESTDIR}. Quiting"
+fi
 
 # And copy it
 if [ -x "${XCLIP}" ]; then
