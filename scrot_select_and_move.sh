@@ -25,10 +25,11 @@ if [ ! -d "${DESTDIR}" ]; then
 fi
 
 # Take scrot, and save filename to a variable
-filename=`sleep 0.2 && ${SCROT} --select --exec 'echo -n $f' '%Y-%m-%d-%H%M%S_$wx$h.png'`
+filename=`sleep 0.2 && \
+	${SCROT} --select --exec 'echo -n $f' '%Y-%m-%d-%H%M%S_$wx$h.png'`
 
 if [ -z "$filename" ]; then
-	fatal "Failed to scrot! Check ~/.xsession-errors"
+	fatal "Failed to scrot!"
 fi
 
 # Move to a tmpfs/ramdisk
@@ -37,7 +38,7 @@ mv "${filename}" "${DESTDIR}/${filename}" || \
 
 # And copy it
 if [ -x "${XCLIP}" ]; then
-	cat "${DESTDIR}/${filename}" | xclip -i
+	cat "${DESTDIR}/${filename}" | xclip -i -t image/png
 else
 	echo "Unable to locate xclip(1). Skipping."
 fi
