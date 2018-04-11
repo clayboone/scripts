@@ -25,7 +25,11 @@ if [ ! -d "${DESTDIR}" ]; then
 fi
 
 # Take scrot, and save filename to a variable
-filename=`${SCROT} --select --exec 'echo -n $f' '%Y-%m-%d-%H%M%S_$wx$h.png'`
+filename=`sleep 0.2 && ${SCROT} --select --exec 'echo -n $f' '%Y-%m-%d-%H%M%S_$wx$h.png'`
+
+if [ -z "$filename" ]; then
+	fatal "Failed to scrot! Check ~/.xsession-errors"
+fi
 
 # Move to a tmpfs/ramdisk
 mv "${filename}" "${DESTDIR}/${filename}" || \ 
