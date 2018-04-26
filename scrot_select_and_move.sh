@@ -42,6 +42,7 @@ fi
 
 # And copy it
 if [ -x "${XCLIP}" ]; then
+	# This next line isn't working... Is it the problem of two clipboards?
 	cat "${DESTDIR}/${filename}" | xclip -i -t image/png
 else
 	echo "Unable to locate xclip(1). Skipping."
