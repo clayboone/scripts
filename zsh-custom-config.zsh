@@ -46,7 +46,7 @@ tmux() {
 	if [ $# -gt 0 ]; then
 		$tmux_cmd "$@"
 	else
-		session=$($tmux_cmd ls | head -n 1 | cut -d: -f1)
+		session=$($tmux_cmd ls 2>/dev/null | head -n 1 | cut -d: -f1)
 		if [ -z $session ]; then
 			$tmux_cmd new-session
 		else
