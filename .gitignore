@@ -12,7 +12,10 @@
 !*.rb
 !*.js
 !*.vbs
+
+# and a few dotfiles
 !*.zsh
+!tmux.conf
 
 # but do ignore testing
 testing.sh

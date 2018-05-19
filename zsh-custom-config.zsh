@@ -33,4 +33,24 @@ man() {
     	LESS_TERMCAP_us=$(printf "\x1b[38;2;150;100;200m") \
     	LESS_TERMCAP_ue=$(printf "\x1b[0m") \
     	man "$@"
-    }
+}
+
+# Attempt to reuse tmux sessions (unless explicitly told to create new)
+tmux_cmd=$(which tmux)
+tmux() {
+	if [ -z $tmux_cmd ]; then
+		echo "tmux not installed" 1>&2
+		return 1
+	fi
+
+	if [ $# -gt 0 ]; then
+		$tmux_cmd "$@"
+	else
+		session=$($tmux_cmd ls | head -n 1 | cut -d: -f1)
+		if [ -z $session ]; then
+			$tmux_cmd new-session
+		else
+			$tmux_cmd attach-session -t $session
+		fi
+	fi
+}
