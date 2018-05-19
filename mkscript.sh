@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ "$#" -ne 1 ];
 then
@@ -21,6 +21,11 @@ case $filetype in
 		;;
 	"py")
 		shebang_line="#!/usr/bin/env python3"
+		coding_line="# -*- coding: utf-8 -*-"
+		;;
+	"js")
+		shebang_line="#!/usr/bin/env node"
+		coding_line="// coding: utf-8"
 		;;
 	"sh")
 		shebang_line="#!/bin/bash"
