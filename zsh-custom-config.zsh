@@ -19,8 +19,10 @@ bindkey -M menuselect 'j' vi-down-line-or-history
 # Don't insert tabs when no chars left of the cursor
 zstyle ':completion:*' insert-tab false
 
-# Binds and aliases
+# git
 bindkey -s '^ ' 'git status --short^M'	# ctrl+space for git status
+#replace oh-my-zsh's `gl` alias
+alias gl='git log --name-status --graph --pretty="tformat:%Cblue%h %Cgreen%an <%ae>%Creset%n%B"' 
 
 # Colorful for man pages
 man() {
