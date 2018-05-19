@@ -1,17 +1,25 @@
 # ignore everything
 *
 
-# except.. shell, python, and ruby scripts..
-!*.sh
-!*.py
-!*.rb
-testing.py
-testing*.py
-
-# and that one random vbs file
-!*.vbs
-
-# git stuff
+# except git stuff
 !.gitignore
 !README.md
 !_config.yml
+
+# and scripts
+!*.sh
+!*.py
+!*.rb
+!*.js
+!*.vbs
+!*.zsh
+
+# but do ignore testing
+testing.sh
+testing*.sh
+testing.py
+testing*.py
+testing.rb
+testing*.rb
+testing.js
+testing*.js
