@@ -30,6 +30,8 @@ const staticEntries = {
     Photos: "https://photos.google.com",
     Calendar: "https://calendar.google.com",
     GitHub: "https://github.com",
+    BitBucket: "https://bitbucket.org",
+    DockerHub: "https://hub.docker.com",
     Reddit: "https://reddit.com",
     Hastebin: "https://hastebin.com",
     YouTube: "https://youtube.com",

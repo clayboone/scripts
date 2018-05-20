@@ -16,6 +16,7 @@
 # and a few dotfiles
 !*.zsh
 !tmux.conf
+!rofi-config.conf
 
 # but do ignore testing
 testing.sh
