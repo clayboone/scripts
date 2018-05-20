@@ -21,8 +21,18 @@ zstyle ':completion:*' insert-tab false
 
 # git
 bindkey -s '^ ' 'git status --short^M'	# ctrl+space for git status
-#replace oh-my-zsh's `gl` alias
 alias gl='git log --name-status --graph --pretty="tformat:%Cblue%h %Cgreen%an <%ae>%Creset%n%B"' 
+
+# git status all
+gsa() {
+	originalDir=${PWD}
+	for project in `ls ${HOME}/Projects`; do
+		cd "${HOME}/Projects/${project}"
+		echo "${project}:"
+		git status --short
+	done
+	cd ${originalDir}
+}
 
 # Colorful for man pages
 man() {
