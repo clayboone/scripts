@@ -24,8 +24,19 @@
 const { spawn } = require("child_process");
 
 const staticEntries = {
-        Keep: "https://keep.google.com",
-        GitHub: "https://github.com",
+    Gmail: "https://gmail.com",
+    Drive: "https://drive.google.com",
+    Keep: "https://keep.google.com",
+    Photos: "https://photos.google.com",
+    Calendar: "https://calendar.google.com",
+    GitHub: "https://github.com",
+    Reddit: "https://reddit.com",
+    Hastebin: "https://hastebin.com",
+    YouTube: "https://youtube.com",
+    Netflix: "https://www.netflix.com",
+    Sheets: "https://sheets.google.com",
+    Twitter: "https://twitter.com",
+    WakaTime: "https://wakatime.com",
 };
 
 const uriRegexes = [
