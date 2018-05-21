@@ -24,6 +24,16 @@
 const { spawn } = require("child_process");
 
 const staticEntries = {
+    Localhost: [
+        80,
+        443,
+        3000,
+        3001,
+        4000,
+        4040,
+        8080,
+        8081,
+    ],
     Gmail: "https://gmail.com",
     Drive: "https://drive.google.com",
     Keep: "https://keep.google.com",
@@ -54,7 +64,7 @@ const ipv4AddressRegex = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){
 const hostnameRegex = "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$";
 
 // spawn rofi child
-const rofi = spawn("/usr/bin/rofi", ["-dmenu", "-i", "-p", "LMRTFM"], {
+const rofi = spawn("/usr/bin/rofi", ["-dmenu", "-i", "-p", "xdg-open"], {
     stdio: ["pipe", "pipe", null]
 });
 rofi.stdin.setDefaultEncoding("utf-8");
@@ -94,8 +104,33 @@ rofi.stdout.on("end", () => {
 
     // is the selected item in the list of staticEntries?
     if (staticEntries.hasOwnProperty(inputString)) {
-        console.log(`${process.argv0}: Static entry "${inputString}" selected.`)
-        return launched = launch(staticEntries[inputString]);
+        console.log(`${process.argv0}: Static entry "${inputString}" selected.`);
+
+        // was it the localhost option?
+        if (inputString === "Localhost") {
+            // let the outer-scope know that we'll call launch() from here
+            launched = true;
+
+            // build a new rofi sub-menu
+            const subRofi = spawn("/usr/bin/rofi", ["-dmenu", "-i", "-p", "Port"], {
+                stdio: ["pipe", "pipe", null]
+            });
+            rofi.stdin.setDefaultEncoding("utf-8");
+
+            // give the new client our list of common ports
+            staticEntries[inputString].forEach((port) => {
+                subRofi.stdin.write(port + "\n");
+            });
+            subRofi.stdin.end();
+
+            // wait for an answer (no stream this time; max of 5 character input)
+            subRofi.stdout.on("data", (data) => {
+                const port = data.toString().trim();
+                launch("http://localhost:" + port);
+            });
+        }
+        if (!launched)
+            return launched = launch(staticEntries[inputString]);
     }
 
     // is the input an exact URI?
@@ -111,7 +146,7 @@ rofi.stdout.on("end", () => {
        && (inputString.indexOf(".") !== -1)         // does it have at least one dot?
        && (inputString.match(ipv4AddressRegex) || inputString.match(hostnameRegex))
        )  {
-            console.log(`${inputString} matched host but not uri`);
+            console.log(`${process.argv0}: ${inputString} matched host but not uri`);
             return launched = launch(`https://${inputString}`); // TODO: nslookup? simple 443/80 portscan?
     }
 
@@ -127,7 +162,7 @@ rofi.stdout.on("end", () => {
  * @returns {Number} child PID. null on failure.
  */
 function launch(url) {
-    console.log(`launch(): going to '${url}'`);
+    console.log(`${process.argv0}: launch(): going to '${url}'`);
     const ff = spawn("xdg-open", [url], {
         stdio: "ignore",
         detached: true,
