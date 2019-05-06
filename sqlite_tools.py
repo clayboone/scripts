@@ -52,3 +52,6 @@ def open_temp_sqlite3(filename, query=None):
     # "Close..."
     connection.close()
     shutil.rmtree(tmp_filepath)
+
+if __name__ == '__main__':
+    raise ImportError('This is a module')
