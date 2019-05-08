@@ -71,6 +71,23 @@ def print_battery_list():
         print(f'{bat_num}\t{capacity}%\t{make} {model}')
 
 
+def print_oneline(battery_number):
+    # Read the batterie's file
+    with open(os.path.join(POWER_SUPPLY_PATH,
+                           f'BAT{battery_number}',
+                           UEVENT_FILENAME),
+              'r') as fd:
+        lines = fd.readlines()
+
+    # Make a dict out of the values
+    b = {}
+    for k, v in [l.split('=') for l in [line.strip() for line in lines]]:
+        b[k.lower()[len('POWER_SUPPLY_'):]] = v
+
+    # Print exactly one line of output
+    print(f'{b["capacity"]}%')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Print battery information in one line')
@@ -85,4 +102,4 @@ if __name__ == '__main__':
         if args.battery_number is None:
             parser.print_usage()
             sys.exit(2)
-        print(args.battery_number)
+        print_oneline(args.battery_number)
