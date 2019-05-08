@@ -12,35 +12,11 @@ remaining can be very, very wrong ("135%" full charge, shutdown at %60, etc)
 """
 
 
-# The example at /usr/lib/i3blocks/battery (perl) prints twice:
-# Full text (time remaining based on `acpi`'s estimation and
-# Short text (either BAT or CHR)
-# Exit with status 33 to signal 'urgent'
-#
-# The default Perl script also uses the `acpi` command about 3 times per
-# instance. That's sorta heavy on resources, and `acpi` isn't installed by
-# default and I don't want to install it.
-#
-# So read files:
-# /sys/class/power_supply/BAT0/status   - show's charging state
-# /sys/class/power_supply/BAT0/capacity - show's charge level
-#
-#
-# https://superuser.com/questions/808397/understanding-the-output-of-sys-class-power-supply-bat0-uevent
-#
-# Actually.. it looks like uevent has everything inside of it.. I could just
-# read one file once per invocation and do math from there.
-#
-# charging state = STATUS
-# charge level   = ENERGY_NOW / ENERGY_FULL (or CAPACITY)
-# time remaining = ENERGY_NOW / POWER_NOW (until discharged)
-# ...
-# i'll have to figure out how to get time-till-charged
-
 import sys
 import os
 import glob
 import argparse
+from datetime import timedelta as delta
 
 
 POWER_SUPPLY_PATH = '/sys/class/power_supply'
@@ -71,21 +47,20 @@ def print_battery_list():
         print(f'{bat_num}\t{capacity}%\t{make} {model}')
 
 
-def print_oneline(battery_number):
-    # Read the batterie's file
+def get_battery_info(battery_number):
+    # Read the battery's uevent file
     with open(os.path.join(POWER_SUPPLY_PATH,
                            f'BAT{battery_number}',
                            UEVENT_FILENAME),
               'r') as fd:
         lines = fd.readlines()
 
-    # Make a dict out of the values
+    # Return a dict out of the values
     b = {}
     for k, v in [l.split('=') for l in [line.strip() for line in lines]]:
         b[k.lower()[len('POWER_SUPPLY_'):]] = v
 
-    # Print exactly one line of output
-    print(f'{b["capacity"]}%')
+    return b
 
 
 if __name__ == '__main__':
@@ -93,13 +68,41 @@ if __name__ == '__main__':
         description='Print battery information in one line')
     parser.add_argument('battery_number', type=int, nargs='?')
     parser.add_argument('-l', '--list', action='store_true',
-                        help='list available batteries')
+                        help='list available batteries and exit')
+    parser.add_argument('-p', '--precision', type=int, default=0,
+                        help='precision of percentage output')
     args = parser.parse_args()
 
     if args.list:
         print_battery_list()
     else:
+        # Quit if we don't have a battery number; No defaults
         if args.battery_number is None:
             parser.print_usage()
             sys.exit(2)
-        print_oneline(args.battery_number)
+
+        # Get information for selected battery
+        info = get_battery_info(args.battery_number)
+
+        # Get format string for chosen precision
+        if args.precision <= 0:
+            fmt_str = '{}{:.0f}% [{}]'
+        else:
+            fmt_str = '{}{:.' + str(args.precision) + 'f}% [{}]'
+
+        # Generate output
+        out = fmt_str.format(
+            '⚡ ' if 'discharging' in info['status'].lower() else '⏚  ',
+            int(info['energy_now']) / int(info['energy_full']) * 100,
+            ':'.join(str(
+                delta(int(info['energy_now']) / int(info['power_now']) / 24)
+            ).split(':')[:2])
+        )
+
+        # Print stuff
+        print(out)  # Long form
+        print(out)  # Short form
+        print('#a1a1a1')  # Foreground color
+        print('#00a000')  # Background color?
+        if int(info['capacity']) > 90:
+            sys.exit(33)
