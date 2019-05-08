@@ -103,6 +103,8 @@ if __name__ == '__main__':
         print(out)  # Long form
         print(out)  # Short form
         print('#a1a1a1')  # Foreground color
-        print('#00a000')  # Background color?
-        if int(info['capacity']) > 90:
+        print('#00a000')  # Background color (why isn't this working?)
+
+        # Magic exit code to make the background solid red.
+        if int(info['capacity']) <= 15:
             sys.exit(33)
