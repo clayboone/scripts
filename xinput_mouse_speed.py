@@ -13,7 +13,7 @@ from gi.repository import Gtk  # noqa
 class xinput(object):
     """Wrapper class around xinput(1) for X11"""
 
-    DEVICE_ID = '12'
+    DEVICE_ID = '2'
     XINPUT_ACCEL_PREFIX = (
         f'xinput set-prop {DEVICE_ID} "libinput Accel Speed" ')
     XINPUT_SPEED_PREFIX = (
@@ -204,6 +204,9 @@ def main():
     win.connect("delete-event", Gtk.main_quit)
     win.show_all()
     Gtk.main()
+
+    # TODO: add a '-o' or '-' option to print to stdout, instead of it being
+    # implied. And call xinput.print() or so.
 
 
 if __name__ == '__main__':
