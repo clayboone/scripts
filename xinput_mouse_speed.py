@@ -111,7 +111,11 @@ class Window(Gtk.Window):
 
     def create_slider(self, initial_value=0, min_value=0,
                       max_value=10, step=0.1, page=0):
-        adj = Gtk.Adjustment(initial_value, min_value, max_value, step, page)
+        adj = Gtk.Adjustment(value=initial_value,
+                             lower=min_value,
+                             upper=max_value,
+                             step_increment=step,
+                             page_increment=page)
         h_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL,
                             adjustment=adj)
 
