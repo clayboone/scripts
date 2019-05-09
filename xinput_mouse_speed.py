@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import os
 import gi
 import shlex
 import subprocess
+import argparse
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk  # noqa
@@ -18,11 +20,12 @@ class Window(Gtk.Window):
                            '"Coordinate Transformation Matrix" '
                            '1 0 0 0 1 0 0 0 ')
 
-    def __init__(self):
+    def __init__(self, outfile=None):
         self.speed_changed = False
         self.accel_changed = False
         self.initial_speed = self.get_initial_speed()
         self.initial_accel = self.get_initial_accel()
+        self.outfile = outfile
 
         # Init Gtk.Window
         Gtk.Window.__init__(self, title=self.WINDOW_NAME)
@@ -73,13 +76,26 @@ class Window(Gtk.Window):
     def ok_button_clicked(self, widget):
         # No need to run xinput again
         # Print the xinput commands required to get this configuration again
-        try:
-            print(self.speed_output_command)
-            print(self.accel_output_command)
-        except BaseException:
-            pass
-        finally:
-            Gtk.main_quit()
+        if self.outfile is not None:
+            try:
+                with open(self.outfile, 'w') as fd:
+                    fd.write('#!/bin/sh\n')
+                    fd.write('{}\n'.format(self.speed_output_command))
+                    fd.write('{}\n'.format(self.accel_output_command))
+
+                os.chmod(self.outfile, 0o744)
+            except BaseException:
+                if __debug__:
+                    print(f'Open {self.outfile} failed or one of the vars did')
+        else:
+            try:
+                print(self.speed_output_command)
+                print(self.accel_output_command)
+            except BaseException:
+                if __debug__:
+                    print(f'One of the vars is not set')
+
+        Gtk.main_quit()
 
     def cancel_button_clicked(self, widget):
         # Revert changes and exit
@@ -132,13 +148,19 @@ class Window(Gtk.Window):
         output = subprocess.check_output(cmd, shell=True)
 
         if __debug__:
-            print(f'Initial Accell {round(float(output.split()[-1]), 2)}')
+            print(f'Initial Accel {round(float(output.split()[-1]), 2)}')
 
         return round(float(output.split()[-1]), 2)
 
 
 def main():
-    win = Window()
+    parser = argparse.ArgumentParser(
+        description='Frontend for xinput (device ID 18)')
+    parser.add_argument('-w', '--write-file', type=str, nargs=1,
+                        help='create script automatically')
+    args = parser.parse_args()
+
+    win = Window(outfile=args.write_file[0])
     win.connect("delete-event", Gtk.main_quit)
     win.show_all()
     Gtk.main()
