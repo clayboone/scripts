@@ -25,8 +25,9 @@ UEVENT_FILENAME = 'uevent'
 
 def print_battery_list():
     # Header
-    print('NUM\tCharge\tModel')
+    print('NUM\tCharge\tCapacity\tModel')
 
+    # For each battery
     for path in glob.glob(os.path.join(POWER_SUPPLY_PATH, 'BAT*')):
         with open(os.path.join(path, UEVENT_FILENAME), 'r') as fd:
             for line in [line.strip() for line in fd.readlines()]:
@@ -37,6 +38,11 @@ def print_battery_list():
                     bat_num = value[3:]
                 elif name == 'capacity':
                     capacity = value
+                elif name == 'energy_full_design':
+                    # The file is in microampere hours. Unit conversion to
+                    # milliampere hours is x / 1,000, but eBay lists these
+                    # batteries as x / 10,000. Who to believe?
+                    storage = '{:,}mAh'.format(int(value) // 1000)
                 elif name == 'model_name':
                     model = value
                 elif name == 'manufacturer':
@@ -44,7 +50,8 @@ def print_battery_list():
                 else:
                     continue
 
-        print(f'{bat_num}\t{capacity}%\t{make} {model}')
+        # Print relevant information
+        print(f'{bat_num}\t{capacity}%\t{storage}\t{make} {model}')
 
 
 def get_battery_info(battery_number):
