@@ -90,13 +90,21 @@ if __name__ == '__main__':
         else:
             fmt_str = '{}{:.' + str(args.precision) + 'f}% [{}]'
 
+        # Get time-till-charged
+        # The status can also be "Unknown" in case the battery is full, but
+        # still plugged in. So we check only whether or not it's discharging.
+        if 'discharging' in info['status'].lower():
+            time_str = ':'.join(str(
+                delta(int(info['energy_now']) / int(info['power_now']) / 24)
+            ).split(':')[:2])
+        else:
+            time_str = '--:--'
+
         # Generate output
         out = fmt_str.format(
             '⚡ ' if 'discharging' in info['status'].lower() else '⏚  ',
             int(info['energy_now']) / int(info['energy_full']) * 100,
-            ':'.join(str(
-                delta(int(info['energy_now']) / int(info['power_now']) / 24)
-            ).split(':')[:2])
+            time_str
         )
 
         # Print stuff
