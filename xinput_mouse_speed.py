@@ -12,13 +12,13 @@ from gi.repository import Gtk  # noqa
 
 class Window(Gtk.Window):
 
+    DEVICE_ID = '12'
     WINDOW_NAME = 'Xinput Config Tool'
-
-    XINPUT_ACCEL_PREFIX = 'xinput -set-prop 18 "libinput Accel Speed" '
-
-    XINPUT_SPEED_PREFIX = ('xinput -set-prop 18 '
-                           '"Coordinate Transformation Matrix" '
-                           '1 0 0 0 1 0 0 0 ')
+    XINPUT_ACCEL_PREFIX = (
+        f'xinput set-prop {DEVICE_ID} "libinput Accel Speed" ')
+    XINPUT_SPEED_PREFIX = (
+        f'xinput set-prop {DEVICE_ID} "Coordinate Transformation Matrix" '
+        '1 0 0 0 1 0 0 0 ')
 
     def __init__(self, outfile=None):
         self.speed_changed = False
@@ -32,7 +32,7 @@ class Window(Gtk.Window):
         self.set_default_size(400, 200)
         self.set_border_width(5)
 
-        # Pseudo-title bar.
+        # Pseudo-title bar
         self.description_label = Gtk.Label()
         self.description_label.set_markup(self.WINDOW_NAME)
         self.description_label.set_line_wrap(True)
@@ -40,6 +40,8 @@ class Window(Gtk.Window):
         # Sliders
         self.speed_slider = self.create_slider(
             min_value=0, max_value=10, initial_value=self.initial_speed)
+        # FIXME: Sometime between Ubuntu 18.04 and Arch 2019-05, this broke.
+        # It's always 0.0 on new instances.
         self.speed_slider.connect("button-release-event",
                                   self.speed_slider_changed)
         self.speed_slider.connect("key-release-event",
@@ -133,7 +135,7 @@ class Window(Gtk.Window):
         self.accel_output_command = cmd_line
 
     def get_initial_speed(self):
-        cmd = "xinput -list-props 18 | grep 'Coordinate Transformation Matrix'"
+        cmd = f"xinput list-props {self.DEVICE_ID} | grep 'Coordinate Transformation Matrix'"
         output = subprocess.check_output(cmd, shell=True)
 
         if __debug__:
@@ -142,9 +144,8 @@ class Window(Gtk.Window):
         return float(output.split()[-1])
 
     def get_initial_accel(self):
-        # FIXME: Sometime between Ubuntu 18.04 and Arch 2019-05, this broke.
-        # It's always 0.0 on new instances.
-        cmd = "xinput -list-props 18 | grep 'libinput Accel Speed'"
+        # xinput prints 2 lines matching this now...
+        cmd = f"xinput list-props {self.DEVICE_ID} | grep 'libinput Accel Speed (293)'"
         output = subprocess.check_output(cmd, shell=True)
 
         if __debug__:
@@ -160,7 +161,11 @@ def main():
                         help='create script automatically')
     args = parser.parse_args()
 
-    win = Window(outfile=args.write_file[0])
+    if args.write_file is not None:
+        win = Window(outfile=args.write_file[0])
+    else:
+        win = Window()
+
     win.connect("delete-event", Gtk.main_quit)
     win.show_all()
     Gtk.main()
