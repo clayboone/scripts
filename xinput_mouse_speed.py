@@ -10,15 +10,46 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk  # noqa
 
 
-class Window(Gtk.Window):
+class xinput(object):
+    """Wrapper class around xinput(1) for X11"""
 
     DEVICE_ID = '12'
-    WINDOW_NAME = 'Xinput Config Tool'
     XINPUT_ACCEL_PREFIX = (
         f'xinput set-prop {DEVICE_ID} "libinput Accel Speed" ')
     XINPUT_SPEED_PREFIX = (
         f'xinput set-prop {DEVICE_ID} "Coordinate Transformation Matrix" '
         '1 0 0 0 1 0 0 0 ')
+
+    def __init__(self):
+        self.__device_id = self.device_id()
+
+    def device_id(self):
+        """Get the device ID for my Razer Deathadder 2013 mouse.
+
+        The new xinput(1) interface to X11 likes to change the device ID
+        whenever the computer sleeps or restarts. So this function grabs it
+        dynamically at runtime.
+        """
+        # TODO: is there a way to use xinput to do this? when the -w file is
+        # written, it won't be able to find the device id if it's changed...
+        #
+        # Or should this program output a small shell script to find the ID
+        # at the output script's runtime? ...programs writing programs...
+
+        if self.__device_id is not None:
+            return self.__device_id
+
+
+class Window(Gtk.Window):
+
+    DEVICE_ID = '12'
+    XINPUT_ACCEL_PREFIX = (
+        f'xinput set-prop {DEVICE_ID} "libinput Accel Speed" ')
+    XINPUT_SPEED_PREFIX = (
+        f'xinput set-prop {DEVICE_ID} "Coordinate Transformation Matrix" '
+        '1 0 0 0 1 0 0 0 ')
+
+    WINDOW_NAME = 'Xinput Config Tool'
 
     def __init__(self, outfile=None):
         self.speed_changed = False
