@@ -3,9 +3,11 @@
 FEH_SAVE="$HOME/.fehbg"
 PREFIX="/tmp/screenlock-"
 
-# Grep out the current wallpaper assuming it was set with feh
+# Grep out the current wallpaper assuming it was set with feh (or wal)
 wallpaper=$(grep feh $FEH_SAVE | awk -F"'" '{ print $2 }')
-lockpaper="$PREFIX$(basename $wallpaper)"
+
+# Set name and location of lock image, ensuring it's a PNG file
+lockpaper="$PREFIX$(basename ${wallpaper%.*}).png"
 
 # If we haven't already made a blurred version of the image
 [ ! -f $lockpaper ] && \
