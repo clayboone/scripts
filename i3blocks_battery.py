@@ -15,7 +15,7 @@ remaining can be very, very wrong ("135%" full charge, shutdown at %60, etc)
 import sys
 import os
 import glob
-import argparse
+from argparse import ArgumentParser
 from datetime import timedelta as delta
 
 
@@ -70,32 +70,44 @@ def get_battery_info(battery_number):
     return b
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Print battery information in one line')
-    parser.add_argument('battery_number', type=int, nargs='?')
-    parser.add_argument('-l', '--list', action='store_true',
-                        help='list available batteries and exit')
-    parser.add_argument('-p', '--precision', type=int, default=0,
-                        help='precision of percentage output')
-    args = parser.parse_args()
+class CommandLine(object):
+    """Process the command line arguments sent to the program."""
 
-    if args.list:
+    def __init__(self):
+        """Parse args immediately."""
+        self.parser = ArgumentParser(
+            description='i3blocks-style battery information')
+        self.parser.add_argument('battery_number', type=int, nargs='?')
+        self.parser.add_argument('-l', '--list', action='store_true',
+                                 help='list available batteries and exit')
+        self.parser.add_argument('-p', '--precision', type=int, default=0,
+                                 help='precision of percentage output')
+        self.args = self.parser.parse_args()
+
+    def usage(self):
+        """Print usage information and quit."""
+        self.parser.print_usage()
+
+
+def main():
+    cli = CommandLine()
+
+    if cli.args.list:
         print_battery_list()
     else:
         # Quit if we don't have a battery number; No defaults
-        if args.battery_number is None:
-            parser.print_usage()
+        if cli.args.battery_number is None:
+            cli.usage()
             sys.exit(2)
 
         # Get information for selected battery
-        info = get_battery_info(args.battery_number)
+        info = get_battery_info(cli.args.battery_number)
 
         # Get format string for chosen precision
-        if args.precision <= 0:
+        if cli.args.precision <= 0:
             fmt_str = '{}{:.0f}% [{}]'
         else:
-            fmt_str = '{}{:.' + str(args.precision) + 'f}% [{}]'
+            fmt_str = '{}{:.' + str(cli.args.precision) + 'f}% [{}]'
 
         # Get time-till-charged
         # The status can also be "Unknown" in case the battery is full, but
@@ -123,3 +135,7 @@ if __name__ == '__main__':
         # Magic exit code to make the background solid red.
         if int(info['capacity']) <= 15:
             sys.exit(33)
+
+
+if __name__ == '__main__':
+    sys.exit(main())
