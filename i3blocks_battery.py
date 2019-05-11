@@ -141,9 +141,16 @@ def main():
     # The status can also be "Unknown" in case the battery is full, but
     # still plugged in. So we check only whether or not it's discharging.
     if 'discharging' in info['status'].lower():
-        time_str = ':'.join(str(
-            delta(int(info['energy_now']) / int(info['power_now']) / 24)
-        ).split(':')[:2])
+
+        # For the first two seconds after unplugging my AC adapter,
+        # 'power_now' is zero. Avoid a divide-by-zero by using something else.
+        if int(info['power_now']) == 0 or info['power_now'] is None:
+            power_now = 10000000  # magic number
+        else:
+            power_now = int(info['power_now'])
+
+        hours = delta(int(info['energy_now']) / power_now / 24)
+        time_str = ':'.join(str(hours).split(':')[:2])
     else:
         time_str = '--:--'
 
