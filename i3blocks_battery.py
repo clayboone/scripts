@@ -113,60 +113,61 @@ def main():
 
     if cli.args.list:
         print_battery_list()
+        sys.exit(0)
+
+    # Find a battery number from somewhere or else quit.
+    if cli.args.instance is not None:
+        battery_number = cli.args.instance
+    elif os.getenv('BLOCK_INSTANCE') is not None:
+        try:
+            battery_number = int(os.getenv('BLOCK_INSTANCE'))
+        except ValueError:
+            err = 'BLOCK_INSTANCE variable must be an integer'
+            cli.error(err)
     else:
-        # Find a battery number from somewhere or else quit.
-        if cli.args.instance is not None:
-            battery_number = cli.args.instance
-        elif os.getenv('BLOCK_INSTANCE') is not None:
-            try:
-                battery_number = int(os.getenv('BLOCK_INSTANCE'))
-            except ValueError:
-                err = 'BLOCK_INSTANCE variable must be an integer'
-                cli.error(err)
+        cli.usage()
+        sys.exit(2)
+
+    # Get information for selected battery
+    info = get_battery_info(battery_number)
+
+    # Get format string for chosen precision
+    if cli.args.decimals <= 0:
+        fmt_str = '{}{:.0f}% [{}]'
+    else:
+        fmt_str = '{}{:.' + str(cli.args.decimals) + 'f}% [{}]'
+
+    # Get time-till-charged
+    # The status can also be "Unknown" in case the battery is full, but
+    # still plugged in. So we check only whether or not it's discharging.
+    if 'discharging' in info['status'].lower():
+        time_str = ':'.join(str(
+            delta(int(info['energy_now']) / int(info['power_now']) / 24)
+        ).split(':')[:2])
+    else:
+        time_str = '--:--'
+
+    # Generate output
+    out = fmt_str.format(
+        '⚡ ' if 'discharging' in info['status'].lower() else '⏚  ',
+        int(info['energy_now']) / int(info['energy_full']) * 100,
+        time_str
+    )
+
+    # Print stuff
+    if os.getenv('BLOCK_MARKUP') == 'pango' or cli.args.pango:
+        if err:
+            print(err, file=sys.stderr)
         else:
-            cli.usage()
-            sys.exit(2)
+            print('<span background="red">hello</span>')
+    else:
+        print(out)  # Long form
+        print(out)  # Short form
+        print(cli.args.fg_color)  # Foreground color
 
-        # Get information for selected battery
-        info = get_battery_info(battery_number)
-
-        # Get format string for chosen precision
-        if cli.args.decimals <= 0:
-            fmt_str = '{}{:.0f}% [{}]'
-        else:
-            fmt_str = '{}{:.' + str(cli.args.decimals) + 'f}% [{}]'
-
-        # Get time-till-charged
-        # The status can also be "Unknown" in case the battery is full, but
-        # still plugged in. So we check only whether or not it's discharging.
-        if 'discharging' in info['status'].lower():
-            time_str = ':'.join(str(
-                delta(int(info['energy_now']) / int(info['power_now']) / 24)
-            ).split(':')[:2])
-        else:
-            time_str = '--:--'
-
-        # Generate output
-        out = fmt_str.format(
-            '⚡ ' if 'discharging' in info['status'].lower() else '⏚  ',
-            int(info['energy_now']) / int(info['energy_full']) * 100,
-            time_str
-        )
-
-        # Print stuff
-        if os.getenv('BLOCK_MARKUP') == 'pango' or cli.args.pango:
-            if err:
-                print(err, file=sys.stderr)
-            else:
-                print('<span background="red">hello</span>')
-        else:
-            print(out)  # Long form
-            print(out)  # Short form
-            print(cli.args.fg_color)  # Foreground color
-
-        # Magic exit code to make the background solid red.
-        if int(info['capacity']) <= 15:
-            sys.exit(33)
+    # Magic exit code to make the background solid red.
+    if int(info['capacity']) <= cli.args.critical_level:
+        sys.exit(33)
 
 
 if __name__ == '__main__':
