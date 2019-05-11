@@ -166,7 +166,12 @@ def main():
         if err:
             print(err, file=sys.stderr)
         else:
-            print('<span background="red">hello</span>')
+            print(
+                '<span bgcolor="#ffffff" fgcolor="#000000"> '
+                '⬛⬛⬛⬛⬛⬜⬜⬜'
+                ' <span fgcolor="white" bgcolor="black">■</span>'
+                '</span>'
+            )
     else:
         print(out)  # Long form
         print(out)  # Short form
