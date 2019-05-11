@@ -77,37 +77,64 @@ class CommandLine(object):
         """Parse args immediately."""
         self.parser = ArgumentParser(
             description='i3blocks-style battery information')
-        self.parser.add_argument('battery_number', type=int, nargs='?')
-        self.parser.add_argument('-l', '--list', action='store_true',
-                                 help='list available batteries and exit')
-        self.parser.add_argument('-p', '--precision', type=int, default=0,
-                                 help='precision of percentage output')
+
+        # optional args
+        self.parser.add_argument(
+            '-i', '--instance', type=int, default=None,
+            help='battery number (same as"instance=0" in i3blocks.conf)')
+        self.parser.add_argument(
+            '-l', '--list', action='store_true',
+            help='list available batteries and exit')
+        self.parser.add_argument(
+            '-d', '--decimals', type=int, default=0,
+            help='precision of percentage output in decimal numbers')
+        self.parser.add_argument(
+            '-p', '---pango', action='store_true',
+            help='output in pango format')
+        self.parser.add_argument(
+            '-c', '--critical-level', type=int, default=5,
+            help='precision of percentage output')
+        self.parser.add_argument(
+            '-fg', '--fg-color', type=str, default='#FFFFFF',
+            help='foreground color as HTML color code')
         self.args = self.parser.parse_args()
 
     def usage(self):
-        """Print usage information and quit."""
+        """Print usage information."""
         self.parser.print_usage()
+
+    def error(self, msg):
+        self.parser.error(msg)
 
 
 def main():
     cli = CommandLine()
+    err = None
 
     if cli.args.list:
         print_battery_list()
     else:
-        # Quit if we don't have a battery number; No defaults
-        if cli.args.battery_number is None:
+        # Find a battery number from somewhere or else quit.
+        if cli.args.instance is not None:
+            battery_number = cli.args.instance
+        elif os.getenv('BLOCK_INSTANCE') is not None:
+            try:
+                battery_number = int(os.getenv('BLOCK_INSTANCE'))
+            except ValueError:
+                err = 'BLOCK_INSTANCE variable must be an integer'
+                cli.error(err)
+        else:
             cli.usage()
             sys.exit(2)
 
         # Get information for selected battery
-        info = get_battery_info(cli.args.battery_number)
+        info = get_battery_info(battery_number)
 
         # Get format string for chosen precision
-        if cli.args.precision <= 0:
+        if cli.args.decimals <= 0:
             fmt_str = '{}{:.0f}% [{}]'
         else:
-            fmt_str = '{}{:.' + str(cli.args.precision) + 'f}% [{}]'
+            fmt_str = '{}{:.' + str(cli.args.decimals) + 'f}% [{}]'
 
         # Get time-till-charged
         # The status can also be "Unknown" in case the battery is full, but
@@ -127,10 +154,15 @@ def main():
         )
 
         # Print stuff
-        print(out)  # Long form
-        print(out)  # Short form
-        print('#a1a1a1')  # Foreground color
-        print('#00a000')  # Background color (why isn't this working?)
+        if os.getenv('BLOCK_MARKUP') == 'pango' or cli.args.pango:
+            if err:
+                print(err, file=sys.stderr)
+            else:
+                print('<span background="red">hello</span>')
+        else:
+            print(out)  # Long form
+            print(out)  # Short form
+            print(cli.args.fg_color)  # Foreground color
 
         # Magic exit code to make the background solid red.
         if int(info['capacity']) <= 15:
