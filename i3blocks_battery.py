@@ -162,16 +162,27 @@ def main():
     )
 
     # Print stuff
+    bars = 8
+    text = ''
+    charge = int(info['energy_now']) / int(info['energy_full'])
+
     if os.getenv('BLOCK_MARKUP') == 'pango' or cli.args.pango:
         if err:
             print(err, file=sys.stderr)
         else:
+            for i in range(1, bars+1):
+                if i / bars <= charge:
+                    text += '⬛'
+                else:
+                    text += '⬜'
+
             print(
-                '<span bgcolor="#ffffff" fgcolor="#000000"> '
-                '⬛⬛⬛⬛⬛⬜⬜⬜'
+                '<span size="x-small" bgcolor="#ffffff" fgcolor="#000000"> '
+                + text +
                 ' <span fgcolor="white" bgcolor="black">■</span>'
                 '</span>'
             )
+            print(charge)
     else:
         print(out)  # Long form
         print(out)  # Short form
