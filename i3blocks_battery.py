@@ -16,7 +16,7 @@ import sys
 import os
 import glob
 from argparse import ArgumentParser
-from datetime import timedelta as delta
+from datetime import timedelta
 
 
 POWER_SUPPLY_PATH = '/sys/class/power_supply'
@@ -107,6 +107,32 @@ class CommandLine(object):
         self.parser.error(msg)
 
 
+class Formatter(object):
+
+    PANGO_BAR_CHARGED = '⬛'
+    PANGO_BAR_EMPTY = '⬜'
+
+    def __init__(self, capacity):
+        self.capacity = capacity
+        pass
+
+    def pango(self, num_blocks=8):
+        text = ''
+
+        for i in range(1, num_blocks+1):
+            if i / num_blocks <= self.capacity:
+                text += self.PANGO_BAR_CHARGED
+            else:
+                text += self.PANGO_BAR_EMPTY
+
+        return (
+            '<span size="x-small" bgcolor="#ffffff" fgcolor="#000000"> '
+            + text +
+            ' <span fgcolor="white" bgcolor="black">■</span>'
+            '</span>'
+        )
+
+
 def main():
     cli = CommandLine()
     err = None
@@ -149,8 +175,8 @@ def main():
         else:
             power_now = int(info['power_now'])
 
-        hours = delta(int(info['energy_now']) / power_now / 24)
-        time_str = ':'.join(str(hours).split(':')[:2])
+        delta = timedelta(int(info['energy_now']) / power_now / 24)
+        time_str = ':'.join(str(delta).split(':')[:2])
     else:
         time_str = '--:--'
 
@@ -162,27 +188,12 @@ def main():
     )
 
     # Print stuff
-    bars = 8
-    text = ''
-    charge = int(info['energy_now']) / int(info['energy_full'])
-
     if os.getenv('BLOCK_MARKUP') == 'pango' or cli.args.pango:
         if err:
             print(err, file=sys.stderr)
         else:
-            for i in range(1, bars+1):
-                if i / bars <= charge:
-                    text += '⬛'
-                else:
-                    text += '⬜'
-
-            print(
-                '<span size="x-small" bgcolor="#ffffff" fgcolor="#000000"> '
-                + text +
-                ' <span fgcolor="white" bgcolor="black">■</span>'
-                '</span>'
-            )
-            print(charge)
+            charge = int(info['energy_now']) / int(info['energy_full'])
+            print(Formatter(capacity=charge).pango(8))
     else:
         print(out)  # Long form
         print(out)  # Short form
