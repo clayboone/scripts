@@ -98,7 +98,7 @@ class CommandLine(object):
         self.parser.add_argument(
             '-n', '--num-bars', type=int, default=-1,
             help='number of bars to use in pango output (default: guess '
-            'based on size of battery')
+            'based on the size of the battery)')
         self.parser.add_argument(
             '-c', '--critical-level', type=int, default=5,
             help='precision of percentage output')
