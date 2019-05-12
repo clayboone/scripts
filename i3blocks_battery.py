@@ -15,8 +15,12 @@ remaining can be very, very wrong ("135%" full charge, shutdown at %60, etc)
 import sys
 import os
 import glob
+# import gi
 from argparse import ArgumentParser
 from datetime import timedelta
+
+# gi.require_version('Notify', '0.7')
+# from gi.repository import Notify  # noqa
 
 
 POWER_SUPPLY_PATH = '/sys/class/power_supply'
