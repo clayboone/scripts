@@ -89,8 +89,12 @@ class CommandLine(object):
             '-d', '--decimals', type=int, default=0,
             help='precision of percentage output in decimal numbers')
         self.parser.add_argument(
-            '-p', '---pango', action='store_true',
+            '-p', '--pango', action='store_true',
             help='output in pango format')
+        self.parser.add_argument(
+            '-n', '--num-bars', type=int, default=-1,
+            help='number of bars to use in pango output (default: guess '
+            'based on size of battery')
         self.parser.add_argument(
             '-c', '--critical-level', type=int, default=5,
             help='precision of percentage output')
@@ -111,15 +115,20 @@ class Formatter(object):
 
     PANGO_BAR_CHARGED = '⬛'
     PANGO_BAR_EMPTY = '⬜'
+    ENERGY_PER_CELL = 14040000  # magic
 
-    def __init__(self, capacity):
-        self.capacity = capacity
+    def __init__(self, charge, energy_full_design):
+        self.capacity = charge
+        self.energy_full_design = energy_full_design
         pass
 
-    def pango(self, num_blocks=8):
+    def pango(self, num_blocks):
         text = ''
 
-        for i in range(1, num_blocks+1):
+        if num_blocks < 0:
+            num_blocks = int(self.energy_full_design // self.ENERGY_PER_CELL)
+
+        for i in range(num_blocks):
             if i / num_blocks <= self.capacity:
                 text += self.PANGO_BAR_CHARGED
             else:
@@ -137,6 +146,7 @@ def main():
     cli = CommandLine()
     err = None
 
+    # If we were asked to list, just list and exit.
     if cli.args.list:
         print_battery_list()
         sys.exit(0)
@@ -193,7 +203,8 @@ def main():
             print(err, file=sys.stderr)
         else:
             charge = int(info['energy_now']) / int(info['energy_full'])
-            print(Formatter(capacity=charge).pango(8))
+            design = int(info['energy_full_design'])
+            print(Formatter(charge, design).pango(cli.args.num_bars))
     else:
         print(out)  # Long form
         print(out)  # Short form
