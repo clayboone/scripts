@@ -120,6 +120,8 @@ class Formatter(object):
 
     PANGO_BAR_CHARGED = '⬛'
     PANGO_BAR_EMPTY = '⬜'
+    SYMBOL_CHARGING = '⏚  '
+    SYMBOL_DISCHARGING = '⚡ '
     ENERGY_PER_CELL = 14040000  # magic
 
     def __init__(self, charge, energy_full_design):
