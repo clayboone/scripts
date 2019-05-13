@@ -112,6 +112,7 @@ class CommandLine(object):
         self.parser.print_usage()
 
     def error(self, msg):
+        """Print a command line error."""
         self.parser.error(msg)
 
 
