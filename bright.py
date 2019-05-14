@@ -2,6 +2,9 @@
 
 import os
 import sys
+import re
+import math
+from enum import Enum
 
 BACKLIGHT_PATH = '/sys/class/backlight/intel_backlight'
 
@@ -54,26 +57,55 @@ class Backlight(object):
         return self.brightness
 
 
+class Action(Enum):
+    HELP = 0
+    INC_RAW = 1
+    DEC_RAW = 2
+    INC_PERCENT = 3
+    DEC_PERCENT = 4
+
+
 class CommandLine(object):
 
     def __init__(self):
+        self.action = None
+
         def shift(x):
-            return x[1:len(x)]
+            return (x[0], x[1:len(x)])
 
-        # Remove script name from args.
-        self.args = shift(sys.argv)
+        self.name, args = shift(sys.argv)
 
-        print(self.args)
+        while len(args) > 0:
+            #print(f'shifting {args[0]}')
+            arg, args = shift(args)
+
+            if arg == '-h':
+                self.action = Action.HELP
+                continue
+
+            match = re.search(r'^[+-]\d*%?$', arg)
+            print(match)
+
+    def print_usage(self):
+        print(f'Usage: {self.name} [-h] {{<[+-]>NUM[%]}}')
 
 
 def main():
     cli = CommandLine()
-
-    if cli.args is None:
-        pass
-
     backlight = Backlight()
-    print(backlight.actual_brightness)
+
+    if cli.action is None:
+        print('{:.0f}%'.format(
+            int(backlight.actual_brightness / backlight.max_brightness * 100)
+        ))
+    elif cli.action is Action.HELP:
+        cli.print_usage()
+    else:
+        print('taking action')
+
+    #backlight.brightness = 4438
+    #print(f'actual = {backlight.actual_brightness}')
+    #print(f'max = {backlight.max_brightness}')
 
     return 0
 
