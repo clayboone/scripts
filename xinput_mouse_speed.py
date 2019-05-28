@@ -42,7 +42,7 @@ class xinput(object):
 
 class Window(Gtk.Window):
 
-    DEVICE_ID = '12'
+    DEVICE_ID = '9'
     XINPUT_ACCEL_PREFIX = (
         f'xinput set-prop {DEVICE_ID} "libinput Accel Speed" ')
     XINPUT_SPEED_PREFIX = (
