@@ -18,11 +18,10 @@ FILE_ACTUAL_BRIGHTNESS = 'actual_brightness'
 
 class Backlight(object):
 
-    def __init__(self, notify=True):
+    def __init__(self):
         self.__max_brightness = -1
         self.__actual_brightness = -1
         self.__brightness = -1
-        self.__should_notify = notify
 
     @property
     def max_brightness(self):
@@ -61,18 +60,14 @@ class Backlight(object):
         except PermissionError as e:
             print(e, file=sys.stderr)
 
-        if self.__should_notify:
-            Notifier.notify('{:.0f}%'.format(
-                self.actual_brightness / self.max_brightness * 100))
-
         return self.brightness
 
 
 class Notifier(object):
 
     @staticmethod
-    def notify(string):
-        Notify.init('bright')
+    def send_notification(string):
+        Notify.init('bright.py')
         notification = Notify.Notification.new('Brightness', string)
         notification.show()
 
@@ -133,7 +128,8 @@ class CommandLine(object):
 
 def main():
     cli = CommandLine()
-    backlight = Backlight(notify=cli.should_notify)
+    backlight = Backlight()
+    initial_brightness = backlight.actual_brightness
 
     def percent(val):
         return int(backlight.max_brightness * val / 100)
@@ -152,6 +148,10 @@ def main():
         backlight.brightness -= percent(cli.value)
     elif cli.action is Action.DEC_RAW:
         backlight.brightness -= cli.value
+
+    if backlight.actual_brightness != initial_brightness and cli.should_notify:
+        Notifier.send_notification('{:.0f}%'.format(
+            backlight.actual_brightness / backlight.max_brightness * 100))
 
     return 0
 
