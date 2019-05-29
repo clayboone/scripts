@@ -3,7 +3,11 @@
 import os
 import sys
 import re
+import gi
 from enum import Enum
+
+gi.require_version('Notify', '0.7')
+from gi.repository import Notify  # noqa
 
 BACKLIGHT_PATH = '/sys/class/backlight/intel_backlight'
 
@@ -14,10 +18,11 @@ FILE_ACTUAL_BRIGHTNESS = 'actual_brightness'
 
 class Backlight(object):
 
-    def __init__(self):
+    def __init__(self, notify=True):
         self.__max_brightness = -1
         self.__actual_brightness = -1
         self.__brightness = -1
+        self.__should_notify = notify
 
     @property
     def max_brightness(self):
@@ -56,7 +61,20 @@ class Backlight(object):
         except PermissionError as e:
             print(e, file=sys.stderr)
 
+        if self.__should_notify:
+            Notifier.notify('{:.0f}%'.format(
+                self.actual_brightness / self.max_brightness * 100))
+
         return self.brightness
+
+
+class Notifier(object):
+
+    @staticmethod
+    def notify(string):
+        Notify.init('bright')
+        notification = Notify.Notification.new('Brightness', string)
+        notification.show()
 
 
 class Action(Enum):
@@ -72,6 +90,7 @@ class CommandLine(object):
     def __init__(self):
         self.action = None
         self.value = None
+        self.should_notify = True
 
         def shift(x):
             return (x[0], x[1:len(x)])
@@ -83,6 +102,10 @@ class CommandLine(object):
 
             if arg == '-h':
                 self.action = Action.HELP
+                continue
+
+            if arg == '-q':
+                self.should_notify = False
                 continue
 
             match = re.search(r'^[+-]\d*%?$', arg)
@@ -105,12 +128,12 @@ class CommandLine(object):
                         self.value = abs(int(s[1:]))
 
     def print_usage(self):
-        print(f'Usage: {self.name} [-h] {{<[+-]>NUM[%]}}')
+        print(f'Usage: {self.name} [-h] [-q] {{<[+-]>NUM[%]}}')
 
 
 def main():
     cli = CommandLine()
-    backlight = Backlight()
+    backlight = Backlight(notify=cli.should_notify)
 
     def percent(val):
         return int(backlight.max_brightness * val / 100)
@@ -129,10 +152,6 @@ def main():
         backlight.brightness -= percent(cli.value)
     elif cli.action is Action.DEC_RAW:
         backlight.brightness -= cli.value
-
-    #backlight.brightness = 4438
-    #print(f'actual = {backlight.actual_brightness}')
-    #print(f'max = {backlight.max_brightness}')
 
     return 0
 
