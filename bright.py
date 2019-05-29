@@ -128,7 +128,6 @@ class CommandLine(object):
 
                     continue
 
-                print(s)
                 if s[len(s)-1] == '%':
                     self.action = Action.SET_PERCENT
                     self.value = int(s[:len(s)-1])
