@@ -76,8 +76,10 @@ class Action(Enum):
     HELP = 0
     INC_RAW = 1
     DEC_RAW = 2
-    INC_PERCENT = 3
-    DEC_PERCENT = 4
+    SET_RAW = 3
+    INC_PERCENT = 4
+    DEC_PERCENT = 5
+    SET_PERCENT = 6
 
 
 class CommandLine(object):
@@ -103,7 +105,7 @@ class CommandLine(object):
                 self.should_notify = False
                 continue
 
-            match = re.search(r'^[+-]\d*%?$', arg)
+            match = re.search(r'^[+-]?\d*%?$', arg)
             if match is not None:
                 s = match.string
                 if s[0] == '+':
@@ -114,6 +116,8 @@ class CommandLine(object):
                         self.action = Action.INC_RAW
                         self.value = abs(int(s[1:]))
 
+                    continue
+
                 if s[0] == '-':
                     if s[len(s)-1] == '%':
                         self.action = Action.DEC_PERCENT
@@ -121,6 +125,16 @@ class CommandLine(object):
                     else:
                         self.action = Action.DEC_RAW
                         self.value = abs(int(s[1:]))
+
+                    continue
+
+                print(s)
+                if s[len(s)-1] == '%':
+                    self.action = Action.SET_PERCENT
+                    self.value = int(s[:len(s)-1])
+                else:
+                    self.action = Action.SET_RAW
+                    self.value = int(s)
 
     def print_usage(self):
         print(f'Usage: {self.name} [-h] [-q] {{<[+-]>NUM[%]}}')
@@ -148,6 +162,10 @@ def main():
         backlight.brightness -= percent(cli.value)
     elif cli.action is Action.DEC_RAW:
         backlight.brightness -= cli.value
+    elif cli.action is Action.SET_PERCENT:
+        backlight.brightness = percent(cli.value)
+    elif cli.action is Action.SET_RAW:
+        backlight.brightness = cli.value
 
     if backlight.actual_brightness != initial_brightness and cli.should_notify:
         Notifier.send_notification('{:.0f}%'.format(
