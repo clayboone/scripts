@@ -1,19 +1,92 @@
 #!/usr/bin/env python3
 
 import sys
-import requests
+import re
+from enum import Enum
 from pylgtv import WebOsClient
 
 
+class Action(Enum):
+    HELP = 0
+    INC_VOLUME = 1
+    DEC_VOLUME = 2
+    SET_VOLUME = 3
+
+
+class TV(object):
+
+    def __init__(self):
+        self.client = WebOsClient('192.168.1.75')
+
+    @property
+    def volume(self):
+        return self.client.get_volume()
+
+    @volume.setter
+    def volume(self, value):
+        assert isinstance(value, int)
+        self.client.set_volume(value)
+
+
+class CommandLine(object):
+
+    def __init__(self):
+        self.action = None
+        self.value = None
+
+        def shift(x):
+            return (x[0], x[1:len(x)])
+
+        self.progname, args = shift(sys.argv)
+
+        while len(args) > 0:
+            arg, args = shift(args)
+
+            if arg == 'volume':
+
+                # search the next arg
+                match = re.search(r'^[-+]?\d*$', args[0])
+
+                if match is not None:
+                    if match.string[0] == '+':
+                        self.action = Action.INC_VOLUME
+                    elif match.string[0] == '-':
+                        self.action = Action.DEC_VOLUME
+                    else:
+                        self.action = Action.SET_VOLUME
+                        self.value = int(match.string[0:len(match.string)])
+                        continue
+
+                    # inc or dec volume
+                    self.value = int(match.string[1:len(match.string)])
+
+
 def main():
-    client = WebOsClient('192.168.1.75')
+    cli = CommandLine()
+    tv = TV()
+
+    if cli.action is Action.HELP:
+        print('Change the TV volume')
+        print('Usage: tv.py volume +1')
+    elif cli.action is Action.INC_VOLUME:
+        tv.volume += cli.value
+    elif cli.action is Action.DEC_VOLUME:
+        tv.volume -= cli.value
+    elif cli.action is Action.SET_VOLUME:
+        tv.volume = cli.value
+
+    #  tv.volume = 0
+    #  tv.volume += 2
+
+    #  client = WebOsClient('192.168.1.75')
     # client.launch_app('com.webos.app.music')
     # client.launch_app('com.webos.app.home') # not working
 
     # services = client.get_services()
     # print(services)
 
-    # client.volume_down()
+    #  client.volume_down()
+    #  print(client.get_volume())
     # client.pause()
     # client.play()
 
@@ -49,12 +122,12 @@ def main():
     #     21)
     # print(c)
 
-    TV_CMD_HOME_MENU = 21  # noqa
-    TV_CMD_UP = 12  # noqa
-    TV_CMD_DOWN = 13  # noqa
-    TV_CMD_LEFT = 14  # noqa
-    TV_CMD_RIGHT = 15  # noqa
-    TV_CMD_OK = 20  # noqa
+    #  TV_CMD_HOME_MENU = 21  # noqa
+    #  TV_CMD_UP = 12  # noqa
+    #  TV_CMD_DOWN = 13  # noqa
+    #  TV_CMD_LEFT = 14  # noqa
+    #  TV_CMD_RIGHT = 15  # noqa
+    #  TV_CMD_OK = 20  # noqa
 
     # a = client.request('media.controls/play')
     # a = client.request('com.webos.service.ime/sendEnterKey')
