@@ -90,7 +90,7 @@ class CommandLine(object):
         self.should_notify = True
 
         def shift(x):
-            return (x[0], x[1:len(x)])
+            return (x[0], x[1:])
 
         self.name, args = shift(sys.argv)
 
@@ -111,7 +111,7 @@ class CommandLine(object):
                 if s[0] == '+':
                     if s[len(s)-1] == '%':
                         self.action = Action.INC_PERCENT
-                        self.value = abs(int(s[1:len(s)-1]))
+                        self.value = abs(int(s[1:-1]))
                     else:
                         self.action = Action.INC_RAW
                         self.value = abs(int(s[1:]))
@@ -119,18 +119,18 @@ class CommandLine(object):
                     continue
 
                 if s[0] == '-':
-                    if s[len(s)-1] == '%':
+                    if s[-1] == '%':
                         self.action = Action.DEC_PERCENT
-                        self.value = abs(int(s[1:len(s)-1]))
+                        self.value = abs(int(s[1:-1]))
                     else:
                         self.action = Action.DEC_RAW
                         self.value = abs(int(s[1:]))
 
                     continue
 
-                if s[len(s)-1] == '%':
+                if s[-1] == '%':
                     self.action = Action.SET_PERCENT
-                    self.value = int(s[:len(s)-1])
+                    self.value = int(s[:-1])
                 else:
                     self.action = Action.SET_RAW
                     self.value = int(s)
