@@ -11,10 +11,12 @@ class Action(Enum):
     INC_VOLUME = 1
     DEC_VOLUME = 2
     SET_VOLUME = 3
+    MUT = 4
+    UNMUT = 5
+    TOGGLE_MUT = 6
 
 
 class TV(object):
-
     def __init__(self):
         self.client = WebOsClient('192.168.1.75')
 
@@ -27,9 +29,17 @@ class TV(object):
         assert isinstance(value, int)
         self.client.set_volume(value)
 
+    def mute(self):
+        self.client.set_mute(True)
+
+    def unmute(self):
+        self.client.set_mute(False)
+
+    def toggle_mute(self):
+        self.client.set_mute(not self.client.get_muted())
+
 
 class CommandLine(object):
-
     def __init__(self):
         self.action = None
         self.value = None
@@ -60,6 +70,15 @@ class CommandLine(object):
                     # inc or dec volume
                     self.value = int(match.string[1:len(match.string)])
 
+            if arg == 'mute':
+                if len(args) > 0 and args[0] == 'toggle':
+                    self.action = Action.TOGGLE_MUT
+                else:
+                    self.action = Action.MUT
+
+            if arg == 'unmute':
+                self.action = Action.UNMUT
+
 
 def main():
     cli = CommandLine()
@@ -74,6 +93,12 @@ def main():
         tv.volume -= cli.value
     elif cli.action is Action.SET_VOLUME:
         tv.volume = cli.value
+    elif cli.action is Action.MUT:
+        tv.mute()
+    elif cli.action is Action.UNMUT:
+        tv.unmute()
+    elif cli.action is Action.TOGGLE_MUT:
+        tv.toggle_mute()
 
     #  tv.volume = 0
     #  tv.volume += 2
