@@ -45,7 +45,7 @@ class CommandLine(object):
         self.value = None
 
         def shift(x):
-            return (x[0], x[1:len(x)])
+            return (x[0], x[1:])
 
         self.progname, args = shift(sys.argv)
 
