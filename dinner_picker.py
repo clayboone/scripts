@@ -41,7 +41,8 @@ class Dinner():
 
     def __init__(self, datetime_seed=None):
         self.seed = datetime_seed
-        random.seed(self.seed.strftime('%Y%m%d'))
+        if datetime_seed is not None:
+            random.seed(self.seed.strftime('%Y%m%d'))
 
     def __repr__(self):
         return 'Dinner({})'.format(
