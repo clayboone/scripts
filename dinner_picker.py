@@ -39,46 +39,48 @@ class Dinner():
         ]
     }
 
-    def __init__(self):
-        pass
+    def __init__(self, datetime_seed=None):
+        self.seed = datetime_seed
+        random.seed(self.seed.strftime('%Y%m%d'))
 
     def __repr__(self):
-        return 'Dinner()'
+        return 'Dinner({})'.format(
+            self.seed
+        )
 
-    @classmethod
-    def pick_dinner(cls, day_offset):
+    def __str__(self):
         """Return a random dinner from one of the lists as a string."""
         choice = None
-        seed = date.today() + timedelta(days=day_offset)
-        random.seed(seed.strftime('%Y%m%d'))
-
-        # FIXME: This shouldn't print anything
-        print(seed.strftime('%Y-%m-%d %A:\t'), end=' ')
 
         if random.choices(['normal', 'takeout'],
                           weights=[0.9, 0.1])[0] == 'takeout':
             choice = 'Takeout!'
         else:
-            weekday = calendar.weekday(seed.year, seed.month, seed.day)
-            if weekday == 1:
-                choice = random.choice(cls.DINNERS['tuesdays'])
-            elif weekday in (5, 6):
-                choice = random.choice(cls.DINNERS['hard'])
-            else:
-                choice = random.choice(cls.DINNERS['easy'])
+            weekday = calendar.weekday(
+                self.seed.year, self.seed.month, self.seed.day)
 
-        print(choice)  # FIXME
+            if weekday == 1:
+                choice = random.choice(self.DINNERS['tuesdays'])
+            elif weekday in (5, 6):
+                choice = random.choice(self.DINNERS['hard'])
+            else:
+                choice = random.choice(self.DINNERS['easy'])
+
         return choice
 
 
 def main():
     """CLI program entry point."""
     for i in range(-5, 15):
+        seed = date.today() + timedelta(days=i)
+        day = 'Today' if i == 0 else seed.strftime('%A')
+        dinner = Dinner(seed)
+
+        fmt = '{} {}:\t{}'
         if i == 0:
-            print()
-        Dinner().pick_dinner(day_offset=i)
-        if i == 0:
-            print()
+            fmt = '\n' + fmt + '\n'
+
+        print(fmt.format(seed.strftime('%Y-%m-%d'), day, dinner))
 
 
 if __name__ == "__main__":
