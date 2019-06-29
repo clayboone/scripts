@@ -5,6 +5,9 @@ COMPOSITE=/usr/bin/composite
 I3LOCK=/usr/bin/i3lock
 LOCKPAPER="/tmp/lockpaper.png"
 
+# Sleep before scrot to try and not catch the i3 bar.
+sleep 0.5
+
 ${SCROT} ${LOCKPAPER}
 ${CONVERT} ${LOCKPAPER} -blur 10x10 ${LOCKPAPER}
 
