@@ -46,5 +46,5 @@ should_lock() {
 
 # main()
 if should_lock; then
-    $HOME/scripts/lock_screen.sh
+    $HOME/scripts/lock_screen_scrot.sh $HOME/images/scythman.png
 fi
