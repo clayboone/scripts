@@ -10,6 +10,6 @@ do
     echo $i
     sleep 0.1
 done | ${ZENITY} --progress \
-              --auto-close \
-              --text="Shutting down..." \
-              && poweroff
+                 --auto-close \
+                 --text="Shutting down..." \
+                 && poweroff
