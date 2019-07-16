@@ -35,7 +35,8 @@ const staticEntries = {
     Netflix: "https://www.netflix.com",
     Sheets: "https://sheets.google.com",
     Twitter: "https://twitter.com",
-    WakaTime: "https://wakatime.com"
+    WakaTime: "https://wakatime.com",
+    Wallhaven: "https://wallhaven.cc"
 };
 
 const uriRegexes = [
