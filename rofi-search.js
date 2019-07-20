@@ -33,6 +33,7 @@ const staticEntries = {
     Hastebin: "https://hastebin.com",
     YouTube: "https://youtube.com",
     Netflix: "https://www.netflix.com",
+    Docs: "https://docs.google.com",
     Sheets: "https://sheets.google.com",
     Twitter: "https://twitter.com",
     WakaTime: "https://wakatime.com",
