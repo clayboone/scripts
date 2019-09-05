@@ -1,75 +1,46 @@
 #!/usr/bin/env python3
+"""Program to set the brightness of the LVDS backlight on Intel laptops."""
 
-import os
-import sys
 import re
-import gi
+import sys
 from enum import Enum
+from pathlib import Path
 
-gi.require_version('Notify', '0.7')
-from gi.repository import Notify  # noqa
-
-BACKLIGHT_PATH = '/sys/class/backlight/intel_backlight'
-
-FILE_BRIGHTNESS = 'brightness'
-FILE_MAX_BRIGHTNESS = 'max_brightness'
-FILE_ACTUAL_BRIGHTNESS = 'actual_brightness'
+# pylint: disable=missing-docstring
 
 
-class Backlight(object):
+class Backlight():
+    """Backlight object representing /sys/class/backlight on Intel devices."""
 
-    def __init__(self):
-        self.__max_brightness = -1
-        self.__actual_brightness = -1
-        self.__brightness = -1
+    SYS_BACKLIGHT_DIR = Path('/sys/class/backlight/intel_backlight')
+    BRIGHTNESS_FILE = SYS_BACKLIGHT_DIR / 'brightness'
+    MAX_BRIGHTNESS_FILE = SYS_BACKLIGHT_DIR / 'max_brightness'
+    ACTUAL_BRIGHTNESS_FILE = SYS_BACKLIGHT_DIR / 'actual_brightness'
 
     @property
     def max_brightness(self):
-        with open(os.path.join(BACKLIGHT_PATH, FILE_MAX_BRIGHTNESS)) as fd:
-            self.__max_brightness = int(fd.readline().strip())
-
-        return self.__max_brightness
+        return int(self.MAX_BRIGHTNESS_FILE.read_text())
 
     @property
     def actual_brightness(self):
-        with open(os.path.join(BACKLIGHT_PATH, FILE_ACTUAL_BRIGHTNESS)) as fd:
-            self.__actual_brightness = int(fd.readline().strip())
-
-        return self.__actual_brightness
+        return int(self.ACTUAL_BRIGHTNESS_FILE.read_text())
 
     @property
     def brightness(self):
-        with open(os.path.join(BACKLIGHT_PATH, FILE_BRIGHTNESS)) as fd:
-            self.__brightness = int(fd.readline().strip())
-
-        return self.__brightness
+        return int(self.BRIGHTNESS_FILE.read_text())
 
     @brightness.setter
     def brightness(self, value):
         assert isinstance(value, int)
-        path = os.path.join(BACKLIGHT_PATH, FILE_BRIGHTNESS)
 
         if value < 100:
             value = 100
         if value > self.max_brightness:
             value = self.max_brightness
 
-        try:
-            with open(path, 'w') as fd:
-                fd.write(f'{value}\n')
-        except PermissionError as e:
-            print(e, file=sys.stderr)
+        self.BRIGHTNESS_FILE.write_text(f'{value}\n')
 
-        return self.brightness
-
-
-class Notifier(object):
-
-    @staticmethod
-    def send_notification(string):
-        Notify.init('bright.py')
-        notification = Notify.Notification.new('Brightness', string)
-        notification.show()
+        return value
 
 
 class Action(Enum):
@@ -82,75 +53,67 @@ class Action(Enum):
     SET_PERCENT = 6
 
 
-class CommandLine(object):
-
+class CommandLine():
     def __init__(self):
         self.action = None
         self.value = None
-        self.should_notify = True
 
-        def shift(x):
-            return (x[0], x[1:])
+        def shift(queue):
+            return (queue[0], queue[1:])
 
         self.name, args = shift(sys.argv)
 
-        while len(args) > 0:
+        while args:
             arg, args = shift(args)
 
             if arg == '-h':
                 self.action = Action.HELP
                 continue
 
-            if arg == '-q':
-                self.should_notify = False
-                continue
-
             match = re.search(r'^[+-]?\d*%?$', arg)
             if match is not None:
-                s = match.string
-                if s[0] == '+':
-                    if s[len(s)-1] == '%':
+                match = match.string
+                if match[0] == '+':
+                    if match[-1] == '%':
                         self.action = Action.INC_PERCENT
-                        self.value = abs(int(s[1:-1]))
+                        self.value = abs(int(match[1:-1]))
                     else:
                         self.action = Action.INC_RAW
-                        self.value = abs(int(s[1:]))
+                        self.value = abs(int(match[1:]))
 
                     continue
 
-                if s[0] == '-':
-                    if s[-1] == '%':
+                if match[0] == '-':
+                    if match[-1] == '%':
                         self.action = Action.DEC_PERCENT
-                        self.value = abs(int(s[1:-1]))
+                        self.value = abs(int(match[1:-1]))
                     else:
                         self.action = Action.DEC_RAW
-                        self.value = abs(int(s[1:]))
+                        self.value = abs(int(match[1:]))
 
                     continue
 
-                if s[-1] == '%':
+                if match[-1] == '%':
                     self.action = Action.SET_PERCENT
-                    self.value = int(s[:-1])
+                    self.value = int(match[:-1])
                 else:
                     self.action = Action.SET_RAW
-                    self.value = int(s)
+                    self.value = int(match)
 
     def print_usage(self):
-        print(f'Usage: {self.name} [-h] [-q] {{<[+-]>NUM[%]}}')
+        print(f'Usage: {self.name} [-h] {{<[+-]>NUM[%]}}')
 
 
 def main():
     cli = CommandLine()
     backlight = Backlight()
-    initial_brightness = backlight.actual_brightness
 
     def percent(val):
         return int(backlight.max_brightness * val / 100)
 
     if cli.action is None:
         print('{:.0f}%'.format(
-            int(backlight.actual_brightness / backlight.max_brightness * 100)
-        ))
+            int(backlight.actual_brightness / backlight.max_brightness * 100)))
     elif cli.action is Action.HELP:
         cli.print_usage()
     elif cli.action is Action.INC_PERCENT:
@@ -166,12 +129,6 @@ def main():
     elif cli.action is Action.SET_RAW:
         backlight.brightness = cli.value
 
-    if backlight.actual_brightness != initial_brightness and cli.should_notify:
-        Notifier.send_notification('{:.0f}%'.format(
-            backlight.actual_brightness / backlight.max_brightness * 100))
-
-    return 0
-
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
