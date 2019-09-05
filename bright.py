@@ -12,33 +12,32 @@ from pathlib import Path
 class Backlight():
     """Backlight object representing /sys/class/backlight on Intel devices."""
 
-    SYS_BACKLIGHT_DIR = Path('/sys/class/backlight/intel_backlight')
-    BRIGHTNESS_FILE = SYS_BACKLIGHT_DIR / 'brightness'
-    MAX_BRIGHTNESS_FILE = SYS_BACKLIGHT_DIR / 'max_brightness'
-    ACTUAL_BRIGHTNESS_FILE = SYS_BACKLIGHT_DIR / 'actual_brightness'
+    SYS_BACKLIGHT = Path('/sys/class/backlight/intel_backlight')
+    BRIGHTNESS = SYS_BACKLIGHT / 'brightness'
+    MAX_BRIGHTNESS = SYS_BACKLIGHT / 'max_brightness'
 
     @property
-    def max_brightness(self):
-        return int(self.MAX_BRIGHTNESS_FILE.read_text())
+    def min(self):
+        return 100
 
     @property
-    def actual_brightness(self):
-        return int(self.ACTUAL_BRIGHTNESS_FILE.read_text())
+    def max(self):
+        return int(self.MAX_BRIGHTNESS.read_text())
 
     @property
     def brightness(self):
-        return int(self.BRIGHTNESS_FILE.read_text())
+        return int(self.BRIGHTNESS.read_text())
 
     @brightness.setter
     def brightness(self, value):
         assert isinstance(value, int)
 
-        if value < 100:
-            value = 100
-        if value > self.max_brightness:
-            value = self.max_brightness
+        if value < self.min:
+            value = self.min
+        if value > self.max:
+            value = self.max
 
-        self.BRIGHTNESS_FILE.write_text(f'{value}\n')
+        self.BRIGHTNESS.write_text(f'{value}\n')
 
         return value
 
@@ -109,11 +108,11 @@ def main():
     backlight = Backlight()
 
     def percent(val):
-        return int(backlight.max_brightness * val / 100)
+        return int(backlight.max * val / 100)
 
     if cli.action is None:
-        print('{:.0f}%'.format(
-            int(backlight.actual_brightness / backlight.max_brightness * 100)))
+        print('{:.0f}%'.format(int(backlight.brightness / backlight.max *
+                                   100)))
     elif cli.action is Action.HELP:
         cli.print_usage()
     elif cli.action is Action.INC_PERCENT:
