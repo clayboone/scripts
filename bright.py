@@ -37,7 +37,7 @@ def main():  # pylint: disable=inconsistent-return-statements
         return print(f'{Backlight.get_brightness() * 100:.0f}%')
 
     value = sys.argv[1].rstrip('%')
-    if re.search(r'^[+-]?\d*$', value):
+    if re.search(r'^[+-]?\d+$', value):
         Backlight.set_brightness(
             float(value) / 100 +
             Backlight.get_brightness() if value.startswith(('+', '-')) else 0)
