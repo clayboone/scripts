@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Print or set the screen brightness."""
-# pylint: disable=missing-docstring
 
 import re
 import sys
@@ -33,6 +32,7 @@ class Backlight():
 
 
 def main():  # pylint: disable=inconsistent-return-statements
+    """Program entry point."""
     if len(sys.argv) < 2:
         return print(f'{Backlight.get_brightness() * 100:.0f}%')
 
