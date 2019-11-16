@@ -21,11 +21,10 @@ def login_and_sync() -> gkeepapi.Keep:
     # TODO: Consider using caching to improve performance.
     keep = gkeepapi.Keep()
 
-    # FIXME: What if the file exists, but it's a folder? What if it exists, but
-    # it's not a valid token file? This should be a try/except.
-    if MASTER_TOKEN_FILE.exists():
+    try:
         keep.resume(USERNAME, MASTER_TOKEN_FILE.read_text().strip())
-    else:
+    except OSError:
+        # TODO: Consider info if debug or "-v".
         try:
             keep.login(USERNAME, PASSWORD)
         except gkeepapi.exception.LoginException:
@@ -35,7 +34,7 @@ def login_and_sync() -> gkeepapi.Keep:
         try:
             MASTER_TOKEN_FILE.write_text(keep.getMasterToken())
         except OSError:
-            pass  # TODO: Consider warning if __debug__ or "-v"
+            pass  # TODO: Consider warning if __debug__ or "-v".
 
     keep.sync()
     return keep
