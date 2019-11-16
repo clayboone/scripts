@@ -18,9 +18,11 @@ SAVE_LOCATION_DIR = MYKEEP_DIR / 'notes'
 
 def login_and_sync() -> gkeepapi.Keep:
     """Login and sync to the Google Keep servers."""
-    # TODO: We can use caching to improve performance.
+    # TODO: Consider using caching to improve performance.
     keep = gkeepapi.Keep()
 
+    # FIXME: What if the file exists, but it's a folder? What if it exists, but
+    # it's not a valid token file? This should be a try/except.
     if MASTER_TOKEN_FILE.exists():
         keep.resume(USERNAME, MASTER_TOKEN_FILE.read_text().strip())
     else:
@@ -33,7 +35,7 @@ def login_and_sync() -> gkeepapi.Keep:
         try:
             MASTER_TOKEN_FILE.write_text(keep.getMasterToken())
         except OSError:
-            pass  # TODO: This is at least a warning...
+            pass  # TODO: Consider warning if __debug__ or "-v"
 
     keep.sync()
     return keep
@@ -43,8 +45,7 @@ def main():
     keep = login_and_sync()
     num_written = 0
 
-    if not SAVE_LOCATION_DIR.exists():
-        SAVE_LOCATION_DIR.mkdir()
+    SAVE_LOCATION_DIR.mkdir(exist_ok=True)
 
     for index, note in enumerate(keep.all()):
         bad_chars = '\ \?\\\/\:\*\"\<\>\|\r'
