@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 import os
 from pathlib import Path
@@ -17,22 +18,27 @@ MYKEEP_DIR = Path('/'.join([
 
 MASTER_TOKEN_FILE = MYKEEP_DIR / 'secret_token.txt'
 SAVE_LOCATION_DIR = MYKEEP_DIR / 'notes'
+KEEP_STATE_FILE = MYKEEP_DIR / 'state.json'
 
 _log = logging.getLogger(__file__)
 
 
 def login_and_sync() -> gkeepapi.Keep:
     """Login and sync to the Google Keep servers."""
-    # TODO: Consider using caching to improve performance.
     keep = gkeepapi.Keep()
+    state = None
+
+    if KEEP_STATE_FILE.exists():
+        _log.info('Restoring saved state')
+        state = json.loads(KEEP_STATE_FILE.read_text(encoding='utf8'))
 
     try:
         _log.info('Reading credentials from master token file')
-        keep.resume(USERNAME, MASTER_TOKEN_FILE.read_text().strip())
+        keep.resume(USERNAME, MASTER_TOKEN_FILE.read_text().strip(), state=state)
     except OSError:
         try:
             _log.info('Falling back to username/password in %s', __file__)
-            keep.login(USERNAME, PASSWORD)
+            keep.login(USERNAME, PASSWORD, state=state)
         except gkeepapi.exception.LoginException:
             _log.error('Failed to authenticate with Google')
             return None
@@ -42,7 +48,12 @@ def login_and_sync() -> gkeepapi.Keep:
         except OSError:
             _log.info('Failed to save token to %s', MASTER_TOKEN_FILE)
 
+    _log.info('Synchronizing with Google servers')
     keep.sync()
+
+    _log.info('Saving state for next time')
+    KEEP_STATE_FILE.write_text(json.dumps(keep.dump()), encoding='utf8')
+
     return keep
 
 
