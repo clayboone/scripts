@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import textwrap
 
 import gkeepapi
 
@@ -78,15 +79,24 @@ def main():
     for index, note in enumerate(keep.all()):
         bad_chars = '\?\\\/\:\*\"\<\>\|\r'
         valid_title = re.sub(f'[{bad_chars}]+', ' ', note.title)
-        filename = f'{index} {valid_title}.txt'
+        note_path = SAVE_LOCATION_DIR / f'{index} {valid_title}.md'
 
-        note_file = SAVE_LOCATION_DIR / filename
+        # labels = keep.getLabel()
+        labels = [label.name for label in note.labels.all()]
+
+        front_matter = textwrap.dedent(f"""\
+            ---
+            title: {note.title}
+            labels: {' '.join(labels)}
+            ---
+        """)
+        content = front_matter + note.text
+
         try:
-            # TODO: Write tags as front-matter and blobs as fire emoji.
-            note_file.write_text(note.text, encoding='utf8')
+            note_path.write_text(content, encoding='utf8')
             num_written += 1
         except OSError as exc:
-            print(f'Failed saving "{str(note_file.name)}": {exc}',
+            print(f'Failed saving "{str(note_path.name)}": {exc}',
                   file=sys.stderr)
 
     print(f'Wrote {num_written} files out of {index + 1} notes.')
