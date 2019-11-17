@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 import re
 import sys
-import textwrap
 
 import gkeepapi
 
@@ -21,15 +20,16 @@ MASTER_TOKEN_FILE = MYKEEP_DIR / 'secret_token.txt'
 SAVE_LOCATION_DIR = MYKEEP_DIR / 'notes'
 KEEP_STATE_FILE = MYKEEP_DIR / 'state.json'
 
-_log = logging.getLogger(__file__)
+# Non-exported const specific to this file. The name is fine.
+_log = logging.getLogger(__file__)  # pylint: disable=invalid-name
 
 
-def login_and_sync() -> gkeepapi.Keep:
+def login_and_sync(use_state=True) -> gkeepapi.Keep:
     """Login and sync to the Google Keep servers."""
     keep = gkeepapi.Keep()
     state = None
 
-    if KEEP_STATE_FILE.exists():
+    if use_state and KEEP_STATE_FILE.exists():
         _log.info('Restoring saved state')
         state = json.loads(KEEP_STATE_FILE.read_text(encoding='utf8'))
 
@@ -50,10 +50,18 @@ def login_and_sync() -> gkeepapi.Keep:
             _log.info('Failed to save token to %s', MASTER_TOKEN_FILE)
 
     _log.info('Synchronizing with Google servers')
-    keep.sync()
+    try:
+        keep.sync()
+    except gkeepapi.exception.SyncException as exc:
+        # Warning because this should use the restored state anyways.
+        _log.warning('Failed to sync with Google servers: "%s".', exc)
 
-    _log.info('Saving state for next time')
-    KEEP_STATE_FILE.write_text(json.dumps(keep.dump()), encoding='utf8')
+    _log.info('Saving state for next sync')
+    try:
+        if use_state:
+            KEEP_STATE_FILE.write_text(json.dumps(keep.dump()), encoding='utf8')
+    except OSError:
+        _log.info('Failed to save state file %s', str(KEEP_STATE_FILE))
 
     return keep
 
@@ -69,37 +77,40 @@ def main():
     if args.verbose >= 2:
         logging.basicConfig(level=logging.DEBUG)
 
-    if not (keep := login_and_sync()):
+    # Pylint and Python are out of sync on the walrus operator.
+    if not (keep := login_and_sync()):  # pylint: disable=superfluous-parens
         _log.info('Failed to login and sync with Google Keep')
         return 1
 
     SAVE_LOCATION_DIR.mkdir(exist_ok=True)
 
-    num_written = 0
+    bytes_written = []
     for index, note in enumerate(keep.all()):
-        bad_chars = '\?\\\/\:\*\"\<\>\|\r'
+        bad_chars = r'\?\\\/\:\*\"\<\>\|\r'
         valid_title = re.sub(f'[{bad_chars}]+', ' ', note.title)
         note_path = SAVE_LOCATION_DIR / f'{index} {valid_title}.md'
 
-        # labels = keep.getLabel()
-        labels = [label.name for label in note.labels.all()]
-
-        front_matter = textwrap.dedent(f"""\
-            ---
-            title: {note.title}
-            labels: {' '.join(labels)}
-            ---
-        """)
-        content = front_matter + note.text
+        content = f'---\ntitle: {note.title}\n'
+        if labels := [label.name for label in note.labels.all()]:
+            content += 'labels: {}\n'.format(' '.join(label.lower()
+                                                      for label in labels))
+        content += f'---\n{note.text}'
 
         try:
-            note_path.write_text(content, encoding='utf8')
-            num_written += 1
+            bytes_written.append(note_path.write_text(content, encoding='utf8'))
         except OSError as exc:
-            print(f'Failed saving "{str(note_path.name)}": {exc}',
-                  file=sys.stderr)
+            _log.error('Failed saving "%s": %s', note_path.name, exc)
 
-    print(f'Wrote {num_written} files out of {index + 1} notes.')
+    if total_notes := len(keep.all()):
+        print('Wrote {} files out of {} notes ({:.02f}KB).'.format(
+            len(bytes_written),
+            total_notes,
+            sum(bytes_written) / 1024
+        ))
+    else:
+        print(f'This account has no Keep notes to download!')
+
+    return 0
 
 
 if __name__ == "__main__":
