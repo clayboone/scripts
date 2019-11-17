@@ -102,7 +102,7 @@ def main():
             _log.error('Failed saving "%s": %s', note_path.name, exc)
 
     if total_notes := len(keep.all()):
-        print('Wrote {} files out of {} notes ({:.02f}KB).'.format(
+        print('Wrote {} files out of {} notes ({:.02f}KiB).'.format(
             len(bytes_written),
             total_notes,
             sum(bytes_written) / 1024
