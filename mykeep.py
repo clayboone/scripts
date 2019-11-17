@@ -47,9 +47,9 @@ def main():
     SAVE_LOCATION_DIR.mkdir(exist_ok=True)
 
     for index, note in enumerate(keep.all()):
-        bad_chars = '\ \?\\\/\:\*\"\<\>\|\r'
-        valid_title = re.sub(f'[{bad_chars}]+', '_', note.title)
-        filename = f'{index}_{valid_title}.txt'
+        bad_chars = '\?\\\/\:\*\"\<\>\|\r'
+        valid_title = re.sub(f'[{bad_chars}]+', ' ', note.title)
+        filename = f'{index} {valid_title}.txt'
 
         note_file = SAVE_LOCATION_DIR / filename
         try:
