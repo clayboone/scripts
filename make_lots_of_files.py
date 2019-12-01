@@ -5,7 +5,7 @@ import random
 import sys
 import textwrap
 
-_log = logging.getLogger(__file__)  # pylint: disable=invalid-name
+_log = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 def _parse_args():
@@ -18,10 +18,12 @@ def _parse_args():
                         help='Number of files to create')
     parser.add_argument('-t', '--type', type=str, default='numeric',
                         help='Type of each file. Either "numeric" or "random"')
-    parser.add_argument('-l', '--length', type=int, default=1024,
-                        help='Average length of each file')
+    parser.add_argument('-s', '--size', type=str,
+                        help='Size of each file')
     parser.add_argument('-f', '--force', action='store_true',
                         help='create files even if output directory is not empty')
+    parser.add_argument('-d', '--dry-run', action='store_true',
+                        help='Do everything except write files')
     parser.add_argument('-v', '--verbose', default=0, action='count',
                         help='Be noisy')
 
@@ -37,11 +39,28 @@ def _parse_args():
     _log.debug('outdir:\t"%s"', args.outdir)
     _log.debug('num:\t%d', args.number_of_files)
     _log.debug('type:\t"%s"', args.type)
-    _log.debug('length:\t%d', args.length)
+    _log.debug('size:\t%s', args.size)
     _log.debug('force:\t%s', args.force)
     _log.debug('verbosity:\t%d', args.verbose)
 
     return args
+
+
+class File:
+    def __init__(self, name: str, type_: str = None, length: int = None, content: str = None):
+        self.name = Path(name)
+        self.type = type_ or 'numeric'
+        self.length = length or 0
+        self.content = content or self.generate_content()
+
+    def __repr__(self):
+        return f'File("{self.name}", {self.content})'
+
+    def generate_content(self):  # TODO
+        return 'FIXME'
+
+    def save(self):  # TODO
+        pass
 
 
 def main():
@@ -52,23 +71,24 @@ def main():
         if args.force:
             _log.warning('Output directory exists. Continuing anyways.')
         else:
-            print(f'Fatal: Output directory exsits: {outdir.absolute()}', file=sys.stderr)
+            print(f'Output directory exsits: {outdir.absolute()}', file=sys.stderr)
             return
 
     _log.info('Creating directory "%s"', outdir.absolute())
     outdir.mkdir(exist_ok=True)
 
-    _log.info('Creating %d files', args.number_of_files)
+    # We generate and write in separate steps to measure performance
+    # independantly.
+    files = []
+    _log.info('Generating %d files', args.number_of_files)
     for file_num in range(args.number_of_files):
-        file_path = outdir / f'File #{file_num}.txt'
+        files.append(File(outdir / f'File #{file_num}.txt'))
+        if file_num == 0:
+            _log.debug('First file:\n%s', repr(files[0]))
 
-        if args.type == 'numeric':
-            max_int = args.number_of_files * 10
-            file_path.write_text('{}\n'.format(random.randint(0, max_int)))
-        else:
-            pass
-
-    _log.info('Wrote %d files', args.number_of_files)
+    _log.info('%s %d files', 'Skipping' if args.dry_run else 'Writing', len(files))
+    for file in files:
+        file.save()
 
 
 if __name__ == "__main__":

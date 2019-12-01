@@ -9,19 +9,19 @@ Requires:
 import asyncio
 import signal
 import sys
-import time
 
 from pynput.mouse import Button, Controller
 
 EVENT_LOOP = asyncio.get_event_loop()
 
 
-def click(button=Button.left, duration=0.1):
+async def click(button=Button.left, duration=0.1, delay=1.0):
     """Send a mouse click."""
     mouse = Controller()
     mouse.press(button)
-    time.sleep(duration)
+    await asyncio.sleep(duration)
     mouse.release(button)
+    await asyncio.sleep(delay)
 
 
 def setup_signal_handlers():
@@ -35,8 +35,9 @@ def setup_signal_handlers():
 def main():
     setup_signal_handlers()
 
-    asyncio.ensure_future(click(duration=2))
-    asyncio.ensure_future(click(duration=2))
+    while True:
+        asyncio.ensure_future(click())
+
     EVENT_LOOP.run_forever()
 
 
