@@ -122,8 +122,11 @@ def main():
             _log.error('Output directory is not empty: "%s"', str(outdir.resolve()))
             return
     else:
-        _log.info('Creating output directory "%s"', outdir.resolve())
-        outdir.mkdir(exist_ok=True)
+        if args.dry_run:
+            _log.info('Would create "%s"', outdir.resolve())
+        else:
+            _log.info('Creating "%s"', outdir.resolve())
+            outdir.mkdir()
 
     if args.numfiles < 1:
         _log.error('No files to write.')
