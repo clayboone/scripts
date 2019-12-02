@@ -2,6 +2,7 @@ import argparse
 import logging
 from pathlib import Path
 import random
+import sys
 import textwrap
 
 _log = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -47,7 +48,7 @@ def _parse_args():
     args = parser.parse_args()
 
     # If --verbose was passed, we might need to enable it for the next lines.
-    # Order is significant; we can only set log level once.
+    # Order is significant; we can only set basicConfig once.
     if args.verbose > 1:
         logging.basicConfig(level=logging.DEBUG)
     if args.verbose > 0:
@@ -64,10 +65,10 @@ def _parse_args():
 
 
 class File:
-    def __init__(self, name: str, type_: str = 'numeric', length: int = 0, content: str = None):
+    def __init__(self, name: str, length: int = 0, content_type: str = 'numeric', content: str = None):
         self.name = Path(name)
         self.length = length
-        self.type = type_
+        self.type = content_type
 
         if content:
             self.content = content
@@ -85,7 +86,8 @@ class File:
             alphabet = [str(i) for i in range(0, 10)]
 
         if self.type == 'ascii':
-            alphabet = [chr(i) for i in range(32, 127)] + ['\n']
+            alphabet = [chr(i) for i in range(32, 127)]
+            alphabet += ['\r\n'] if 'win' in sys.platform else ['\n']
 
         for _ in range(0, self.length):
             content += random.choice(alphabet)
@@ -137,7 +139,7 @@ def main():
     files = []
     _log.info('Generating %d files', args.numfiles)
     for file_num in range(args.numfiles):
-        files.append(File(outdir / f'File #{file_num}.txt', length=args.size, type_=args.type))
+        files.append(File(outdir / f'File #{file_num}.txt', length=args.size, content_type=args.type))
 
     _log.info('%s %d files', 'Skipping' if args.dry_run else 'Writing', len(files))
     for file in files:
