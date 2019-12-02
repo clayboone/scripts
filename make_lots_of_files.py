@@ -2,26 +2,43 @@ import argparse
 import logging
 from pathlib import Path
 import random
-import sys
 import textwrap
 
 _log = logging.getLogger(__name__)  # pylint: disable=invalid-name
+
+
+def positive_int(value: str):
+    try:
+        value = int(value)
+
+        if value < 0:
+            raise ValueError()
+    except ValueError as exc:
+        _log.error(exc_info=exc)
+
+    return value
+
+def valid_type(value: str):
+    valid_types = ['numeric', 'ascii']
+
+    if value not in valid_types:
+        raise ValueError(f'Invalid type "{value}"')
+
+    return value
 
 
 def _parse_args():
     parser = argparse.ArgumentParser(description=textwrap.dedent("""\
         Create some files filled with some random content in a directory.
         """))
-    parser.add_argument('-o', '--outdir', type=str, default='.',
-                        help='output directory')
-    parser.add_argument('-n', '--number-of-files', type=int, default=0,
+    parser.add_argument('outdir', type=str, default='.',
+                        help='Output directory')
+    parser.add_argument('numfiles', type=positive_int, default=0,
                         help='Number of files to create')
-    parser.add_argument('-t', '--type', type=str, default='numeric',
-                        help='Type of each file. Either "numeric" or "random"')
-    parser.add_argument('-s', '--size', type=str,
+    parser.add_argument('-t', '--type', type=valid_type, default='numeric',
+                        help='Type of each file. Either "numeric" or "ascii"')
+    parser.add_argument('-s', '--size', type=positive_int, default=0,
                         help='Size of each file')
-    parser.add_argument('-f', '--force', action='store_true',
-                        help='create files even if output directory is not empty')
     parser.add_argument('-d', '--dry-run', action='store_true',
                         help='Do everything except write files')
     parser.add_argument('-v', '--verbose', default=0, action='count',
@@ -37,30 +54,63 @@ def _parse_args():
         logging.basicConfig(level=logging.INFO)
 
     _log.debug('outdir:\t"%s"', args.outdir)
-    _log.debug('num:\t%d', args.number_of_files)
+    _log.debug('num:\t%d', args.numfiles)
     _log.debug('type:\t"%s"', args.type)
     _log.debug('size:\t%s', args.size)
-    _log.debug('force:\t%s', args.force)
-    _log.debug('verbosity:\t%d', args.verbose)
+    _log.debug('dry:\t%s', args.dry_run)
+    _log.debug('verbose:\t%d', args.verbose)
 
     return args
 
 
 class File:
-    def __init__(self, name: str, type_: str = None, length: int = None, content: str = None):
+    def __init__(self, name: str, type_: str = 'numeric', length: int = 0, content: str = None):
         self.name = Path(name)
-        self.type = type_ or 'numeric'
-        self.length = length or 0
-        self.content = content or self.generate_content()
+        self.length = length
+        self.type = type_
+
+        if content:
+            self.content = content
+        else:
+            self.generate_content()
 
     def __repr__(self):
-        return f'File("{self.name}", {self.content})'
+        return f'File("{self.name}", "{self.content}")'
 
-    def generate_content(self):  # TODO
-        return 'FIXME'
+    def generate_content(self):
+        content = ''
+        alphabet = None
 
-    def save(self):  # TODO
+        if self.type == 'numeric':
+            alphabet = [str(i) for i in range(0, 10)]
+
+        if self.type == 'ascii':
+            alphabet = [chr(i) for i in range(32, 127)] + ['\n']
+
+        for _ in range(0, self.length):
+            content += random.choice(alphabet)
+
+        self.content = content
+
+    def save(self, dry_run: bool = False):
+        if dry_run:
+            _log.debug('Skipping (dry run): "%s"', str(self.name.resolve()))
+        else:
+            _log.debug('Writing: "%s"', str(self.name.resolve()))
+            self.name.write_text(self.content, encoding='utf8')
+
+    async def asave(self):  # TODO
         pass
+
+
+def is_empty(name: str):
+    # The very first file indicates non-empty.
+    for _ in Path(name).iterdir():
+        break
+    else:
+        return True
+
+    return False
 
 
 def main():
@@ -68,27 +118,27 @@ def main():
 
     outdir = Path(args.outdir)
     if outdir.exists():
-        if args.force:
-            _log.warning('Output directory exists. Continuing anyways.')
-        else:
-            print(f'Output directory exsits: {outdir.absolute()}', file=sys.stderr)
+        if not is_empty(outdir):
+            _log.error('Output directory is not empty: "%s"', str(outdir.resolve()))
             return
+    else:
+        _log.info('Creating output directory "%s"', outdir.resolve())
+        outdir.mkdir(exist_ok=True)
 
-    _log.info('Creating directory "%s"', outdir.absolute())
-    outdir.mkdir(exist_ok=True)
+    if args.numfiles < 1:
+        _log.error('No files to write.')
+        return
 
-    # We generate and write in separate steps to measure performance
-    # independantly.
+    # We generate content and write files in separate steps to measure
+    # performance independantly.
     files = []
-    _log.info('Generating %d files', args.number_of_files)
-    for file_num in range(args.number_of_files):
-        files.append(File(outdir / f'File #{file_num}.txt'))
-        if file_num == 0:
-            _log.debug('First file:\n%s', repr(files[0]))
+    _log.info('Generating %d files', args.numfiles)
+    for file_num in range(args.numfiles):
+        files.append(File(outdir / f'File #{file_num}.txt', length=args.size, type_=args.type))
 
     _log.info('%s %d files', 'Skipping' if args.dry_run else 'Writing', len(files))
     for file in files:
-        file.save()
+        file.save(dry_run=args.dry_run)
 
 
 if __name__ == "__main__":
