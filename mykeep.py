@@ -66,6 +66,15 @@ def login_and_sync(use_state=True) -> gkeepapi.Keep:
     return keep
 
 
+def remove_invalid_chars(string: str) -> str:
+    """Convert a string to a valid filename for the platform."""
+    if 'win' not in sys.platform:
+        log.warning('Method not yet tested on other platforms')
+
+    bad_chars = r'\?\\\/\:\*\"\<\>\|\r'
+    return re.sub(f'[{bad_chars}]+', ' ', string).strip()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Download your Google Keep notes')
@@ -86,10 +95,7 @@ def main():
 
     bytes_written = []
     for index, note in enumerate(keep.all()):
-        bad_chars = r'\?\\\/\:\*\"\<\>\|\r'
-        valid_title = re.sub(f'[{bad_chars}]+', ' ', note.title)
-        note_path = SAVE_LOCATION_DIR / f'{index} {valid_title}.md'
-
+        note_path = SAVE_LOCATION_DIR / f'{index} {remove_invalid_chars(note.name)}.md'
         content = textwrap.dedent(f"""\
             ---
             title: {note.title}
