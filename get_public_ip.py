@@ -7,16 +7,16 @@ import requests
 
 
 def get_public_ip():
-    HTTP_BIN_URI = 'https://httpbin.org/ip'
-    ERROR_STRING = '?.?.?.?'
+    http_bin_uri = 'https://httpbin.org/ip'
+    error_string = '0.0.0.0'
 
     try:
-        with requests.get(HTTP_BIN_URI) as response:
+        with requests.get(http_bin_uri) as response:
             origin = json.loads(response.content.decode('utf8'))['origin']
-    except (requests.ConnectionError, requests.ConnectTimeout) as exc:
-        return ERROR_STRING
+    except (requests.ConnectionError, requests.ConnectTimeout):
+        return error_string
 
-    origins = [r.strip() for r in origin.split(',')]
+    origins = [res.strip() for res in origin.split(',')]
 
     # Httpbin returns two identical values in all of my tests. When they change,
     # it's time to find out why.
