@@ -56,12 +56,12 @@ def login_and_sync(use_state=True) -> gkeepapi.Keep:
         # Warning because this should use the restored state anyways.
         log.warning('Failed to sync with Google servers: "%s".', exc)
 
-    log.info('Saving state for next sync')
-    try:
-        if use_state:
+    if use_state:
+        log.info('Saving state for next sync')
+        try:
             KEEP_STATE_FILE.write_text(json.dumps(keep.dump()), encoding='utf8')
-    except OSError:
-        log.info('Failed to save state file %s', str(KEEP_STATE_FILE))
+        except OSError:
+            log.info('Failed to save state file %s', str(KEEP_STATE_FILE))
 
     return keep
 
