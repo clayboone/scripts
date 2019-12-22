@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import re
 import sys
+from tempfile import TemporaryDirectory
 import textwrap
 
 import gkeepapi
@@ -18,10 +19,11 @@ MYKEEP_DIR = Path('/'.join([
 ]))  # C:\Users\<your_username>\mykeep
 
 MASTER_TOKEN_FILE = MYKEEP_DIR / 'secret_token.txt'
-SAVE_LOCATION_DIR = MYKEEP_DIR / 'notes'
 KEEP_STATE_FILE = MYKEEP_DIR / 'state.json'
 
-log = logging.getLogger(__name__)
+FALLBACK_EDITOR = 'vim'
+
+log = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 def login_and_sync(use_state=True) -> gkeepapi.Keep:
@@ -75,10 +77,46 @@ def remove_invalid_chars(string: str) -> str:
     return re.sub(f'[{bad_chars}]+', ' ', string).strip()
 
 
+def save_notes(keep: gkeepapi.Keep, dest: str) -> int:
+    """Save the all notes to a folder.
+
+    @param keep Keep object containing notes.
+    @param dest Destination directory to write files.
+    @return Number of files written.
+    """
+    bytes_written = []
+    for index, note in enumerate(keep.all()):
+        note_path = Path(dest) / f'{index} {remove_invalid_chars(note.title)}.md'
+        content = textwrap.dedent(f"""\
+            ---
+            title: {note.title}
+            labels: {' '.join([label.name for label in note.labels.all()])}
+            ---
+        """)
+        content += note.text
+
+        try:
+            bytes_written.append(note_path.write_text(content, encoding='utf8'))
+        except OSError as exc:
+            log.error('Failed saving "%s": %s', note_path.name, exc)
+
+    log.info('Wrote %s files from %s notes (%.02f KiB).',
+             len(bytes_written),
+             len(keep.all()),
+             sum(bytes_written) / 1024)
+
+    return len(bytes_written) or None
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Download your Google Keep notes')
-    parser.add_argument('-v', '--verbose', action='count', default=0)
+    parser.add_argument('-v', '--verbose', action='count', default=0,
+                        help='Use multiple times to increase verbosity')
+    parser.add_argument('-d', '--directory', type=str,
+                        help='Download location for note files')
+    parser.epilog = (f'Specifying an output directory with the "-d" option '
+                     f'will prevent {sys.argv[0]} from running an editor.')
     args = parser.parse_args()
 
     if args.verbose == 1:
@@ -86,37 +124,24 @@ def main():
     if args.verbose >= 2:
         logging.basicConfig(level=logging.DEBUG)
 
-    # Pylint and Python disagree about the walrus operator.
     if not (keep := login_and_sync()):  # pylint: disable=superfluous-parens
-        log.info('Failed to login and sync with Google Keep')
+        log.error('Failed to login and sync with Google Keep')
         return 1
 
-    SAVE_LOCATION_DIR.mkdir(exist_ok=True)
-
-    bytes_written = []
-    for index, note in enumerate(keep.all()):
-        note_path = SAVE_LOCATION_DIR / f'{index} {remove_invalid_chars(note.name)}.md'
-        content = textwrap.dedent(f"""\
-            ---
-            title: {note.title}
-            labels: {' '.join([label.name for label in note.labels.all()])}
-            ---
-            {note.text}
-        """)
-
-        try:
-            bytes_written.append(note_path.write_text(content, encoding='utf8'))
-        except OSError as exc:
-            log.error('Failed saving "%s": %s', note_path.name, exc)
-
-    if total_notes := len(keep.all()):
-        print('Wrote {} files out of {} notes ({:.02f}KiB).'.format(
-            len(bytes_written),
-            total_notes,
-            sum(bytes_written) / 1024
-        ))
+    if args.directory:
+        save_notes(keep, args.directory)
     else:
-        print(f'This account has no Keep notes to download!')
+        with TemporaryDirectory() as tempdir:
+            save_notes(keep, tempdir)
+
+            # TODO: Different editors support using folders differently (eg.
+            # VSCode, Vim) or not at all (eg. Nano) and this line is pretty
+            # ugly as it uses os.system(). Also, there's no guarantee that
+            # anything will actually run in Windows' cmd.exe, so we may need to
+            # actually search $PATH to see if we can run an editor.
+            os.system(os.getenv('EDITOR', FALLBACK_EDITOR) + f' {tempdir}')
+
+            # TODO: Read notes for changes and re-sync.
 
     return 0
 
