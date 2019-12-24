@@ -180,11 +180,11 @@ def main():
     parser = argparse.ArgumentParser(
         description='Download your Google Keep notes')
     parser.add_argument('-v', '--verbose', action='count', default=0,
-                        help='Use multiple times to increase verbosity')
+                        help='use multiple times to increase verbosity')
     parser.add_argument('-s', '--no-state', action='store_true', default=False,
-                        help=f'Prevent {sys.argv[0]} from storing and using state.')
+                        help=f'prevent {sys.argv[0]} from storing and using state.')
     parser.add_argument('-d', '--directory', type=str,
-                        help='Download location for note files')
+                        help='download location for note files')
     parser.epilog = (f'Specifying an output directory with the "-d" option '
                      f'will prevent {sys.argv[0]} from running an editor.')
     args = parser.parse_args()
