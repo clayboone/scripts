@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import sys
 from tempfile import TemporaryDirectory
+from typing import Optional, Union
 import textwrap
 
 import gkeepapi
@@ -13,43 +14,114 @@ import gkeepapi
 USERNAME = ''  # Full GMail address, not just the username.
 PASSWORD = ''  # App-password here (remember to delete it in account).
 
-MYKEEP_DIR = Path('/'.join([
-    os.getenv('USERPROFILE' if 'win' in sys.platform else 'HOME'),
-    Path(__file__).name.split('.')[0]
-]))  # C:\Users\<your_username>\mykeep
-
-MASTER_TOKEN_FILE = MYKEEP_DIR / 'secret_token.txt'
-KEEP_STATE_FILE = MYKEEP_DIR / 'state.json'
-
 FALLBACK_EDITOR = 'vim'
 
 log = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
-def login_and_sync(use_state=True) -> gkeepapi.Keep:
+class Config:
+    """Configuration settings object for mykeep.py"""
+    STATE_FILENAME = 'state.json'
+    TOKEN_FILENAME = 'token'
+
+    def __init__(self, use_state: bool = True):
+        self.use_state = use_state
+        self._path = None
+        self._state_path = self.path / self.STATE_FILENAME
+        self._token_path = self.path / self.TOKEN_FILENAME
+
+    @staticmethod
+    def _resolve_environment(unresolved_path: str) -> str:
+        resolved_path = None
+        if match := re.search(r'\$\w+', unresolved_path):
+            escaped_val = os.getenv(match[0][1:], '').replace('\\', '\\\\')
+            resolved_path = re.sub(r'\$\w+', escaped_val, unresolved_path)
+
+        # FIXME: This is an interesting statement...
+        return resolved_path or unresolved_path
+
+    @property
+    def path(self):
+        """Path object of the configuration directory."""
+        if self._path:
+            return self._path
+
+        if 'win' in sys.platform:
+            possible_paths = ['$USERPROFILE/.mykeep', '$LOCALAPPDATA/mykeep']
+        else:
+            possible_paths = ['$HOME/.mykeep', '$XDG_CONFIG_HOME/mykeep', '$HOME/.config/mykeep']
+
+        for possible_path in possible_paths:
+            possible_path = Path(self._resolve_environment(possible_path))
+            if possible_path.is_dir():
+                self._path = possible_path
+
+        if not self._path:
+            self._path = Path(self._resolve_environment(possible_paths[-1]))
+            self._path.mkdir()
+
+        log.info('Using config path "%s"', str(self._path))
+        return self._path
+
+    @property
+    def state(self) -> Optional[dict]:
+        if not self.use_state:
+            log.info('Skipping loading state.')
+            return None
+
+        try:
+            return json.loads(self._state_path.read_text(encoding='utf8'))
+        except FileNotFoundError:
+            log.info('No state file found.')
+            return None
+
+    @state.setter
+    def state(self, value: dict) -> int:
+        if not self.use_state:
+            log.info('Skipping saving state.')
+            return 0
+
+        log.info('Saving state to "%s"', str(self._state_path))
+        try:
+            return self._state_path.write_text(json.dumps(value), encoding='utf8')
+        except OSError as exc:
+            log.error('Failed saving state file: %s', exc)
+            return 0
+
+    @property
+    def token(self) -> Optional[str]:
+        try:
+            return self._token_path.read_text().strip()
+        except FileNotFoundError:
+            log.info('No token file found.')
+            return None
+
+    @token.setter
+    def token(self, value: str) -> int:
+        log.info('Saving token to "%s"', str(self._token_path))
+        try:
+            return self._token_path.write_text(value)
+        except OSError as exc:
+            log.error('Failed saving token file: %s', exc)
+            return 0
+
+
+def login_and_sync(config: Config) -> gkeepapi.Keep:
     """Login and sync to the Google Keep servers."""
     keep = gkeepapi.Keep()
-    state = None
-
-    if use_state and KEEP_STATE_FILE.exists():
-        log.info('Restoring saved state')
-        state = json.loads(KEEP_STATE_FILE.read_text(encoding='utf8'))
 
     try:
         log.info('Reading credentials from master token file')
-        keep.resume(USERNAME, MASTER_TOKEN_FILE.read_text().strip(), state=state)
+        keep.resume(USERNAME, config.token, state=config.state)
     except OSError:
         try:
             log.info('Falling back to username/password in %s', __file__)
-            keep.login(USERNAME, PASSWORD, state=state)
+            keep.login(USERNAME, PASSWORD, state=config.state)
         except gkeepapi.exception.LoginException:
             log.error('Failed to authenticate with Google')
             return None
 
-        try:
-            MASTER_TOKEN_FILE.write_text(keep.getMasterToken())
-        except OSError:
-            log.info('Failed to save token to %s', MASTER_TOKEN_FILE)
+        config.token = keep.getMasterToken()
 
     log.info('Synchronizing with Google servers')
     try:
@@ -58,12 +130,7 @@ def login_and_sync(use_state=True) -> gkeepapi.Keep:
         # Warning because this should use the restored state anyways.
         log.warning('Failed to sync with Google servers: "%s".', exc)
 
-    if use_state:
-        log.info('Saving state for next sync')
-        try:
-            KEEP_STATE_FILE.write_text(json.dumps(keep.dump()), encoding='utf8')
-        except OSError:
-            log.info('Failed to save state file %s', str(KEEP_STATE_FILE))
+    config.state = keep.dump()
 
     return keep
 
@@ -77,16 +144,19 @@ def remove_invalid_chars(string: str) -> str:
     return re.sub(f'[{bad_chars}]+', ' ', string).strip()
 
 
-def save_notes(keep: gkeepapi.Keep, dest: str) -> int:
-    """Save the all notes to a folder.
+def save_notes(keep: gkeepapi.Keep, dest: Union[Path, str]) -> int:
+    """Save all notes to a directory.
 
     @param keep Keep object containing notes.
-    @param dest Destination directory to write files.
+    @param dest Directory wherein to write files.
     @return Number of files written.
     """
     bytes_written = []
     for index, note in enumerate(keep.all()):
+        log.debug('Saving note "%s"', note.title)
         note_path = Path(dest) / f'{index} {remove_invalid_chars(note.title)}.md'
+
+        log.debug('Using filename "%s"', str(note_path))
         content = textwrap.dedent(f"""\
             ---
             title: {note.title}
@@ -100,12 +170,10 @@ def save_notes(keep: gkeepapi.Keep, dest: str) -> int:
         except OSError as exc:
             log.error('Failed saving "%s": %s', note_path.name, exc)
 
-    log.info('Wrote %s files from %s notes (%.02f KiB).',
-             len(bytes_written),
-             len(keep.all()),
-             sum(bytes_written) / 1024)
+    stats = len(bytes_written), len(keep.all()), sum(bytes_written) / 1024
+    log.info('Wrote %s files from %s notes (%.02f KiB).', *stats)
 
-    return len(bytes_written) or None
+    return len(bytes_written)
 
 
 def main():
@@ -113,6 +181,8 @@ def main():
         description='Download your Google Keep notes')
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='Use multiple times to increase verbosity')
+    parser.add_argument('-s', '--no-state', action='store_true', default=False,
+                        help=f'Prevent {sys.argv[0]} from storing and using state.')
     parser.add_argument('-d', '--directory', type=str,
                         help='Download location for note files')
     parser.epilog = (f'Specifying an output directory with the "-d" option '
@@ -124,7 +194,9 @@ def main():
     if args.verbose >= 2:
         logging.basicConfig(level=logging.DEBUG)
 
-    if not (keep := login_and_sync()):  # pylint: disable=superfluous-parens
+    config = Config(use_state=not args.no_state)
+
+    if not (keep := login_and_sync(config)):  # pylint: disable=superfluous-parens
         log.error('Failed to login and sync with Google Keep')
         return 1
 
@@ -133,6 +205,10 @@ def main():
     else:
         with TemporaryDirectory() as tempdir:
             save_notes(keep, tempdir)
+            # run_editor(tempdir)  # FIXME
+            #   -> vscode: code --new-window --folder-uri $tempdir
+            #   ->    vim: vim $tempdir
+            #   -> editors that don't support folders -> bash?
 
             # TODO: Different editors support using folders differently (eg.
             # VSCode, Vim) or not at all (eg. Nano) and this line is pretty
