@@ -181,7 +181,7 @@ def main():
         description='Download your Google Keep notes')
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='use multiple times to increase verbosity')
-    parser.add_argument('-s', '--no-state', action='store_true', default=False,
+    parser.add_argument('--no-state', action='store_true', default=False,
                         help=f'prevent {sys.argv[0]} from storing and using state.')
     parser.add_argument('-d', '--directory', type=str,
                         help='download location for note files')
