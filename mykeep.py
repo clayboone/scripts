@@ -110,15 +110,16 @@ def login_and_sync(config: Config) -> gkeepapi.Keep:
     """Login and sync to the Google Keep servers."""
     keep = gkeepapi.Keep()
 
+    # TODO: Swap around order here to prefer login/password. Warn when both
+    # types of credential are available.
     try:
         log.info('Reading credentials from master token file')
         keep.resume(USERNAME, config.token, state=config.state)
-    except OSError:
+    except gkeepapi.exception.LoginException:
         try:
             log.info('Falling back to username/password in %s', __file__)
             keep.login(USERNAME, PASSWORD, state=config.state)
         except gkeepapi.exception.LoginException:
-            log.error('Failed to authenticate with Google')
             return None
 
         config.token = keep.getMasterToken()
@@ -195,9 +196,10 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
 
     config = Config(use_state=not args.no_state)
+    keep = login_and_sync(config)
 
-    if not (keep := login_and_sync(config)):  # pylint: disable=superfluous-parens
-        log.error('Failed to login and sync with Google Keep')
+    if not keep:
+        log.error('Failed to authenticate with Google')
         return 1
 
     if args.directory:
@@ -205,16 +207,17 @@ def main():
     else:
         with TemporaryDirectory() as tempdir:
             save_notes(keep, tempdir)
-            # run_editor(tempdir)  # FIXME
-            #   -> vscode: code --new-window --folder-uri $tempdir
-            #   ->    vim: vim $tempdir
-            #   -> editors that don't support folders -> bash?
-
             # TODO: Different editors support using folders differently (eg.
             # VSCode, Vim) or not at all (eg. Nano) and this line is pretty
             # ugly as it uses os.system(). Also, there's no guarantee that
             # anything will actually run in Windows' cmd.exe, so we may need to
             # actually search $PATH to see if we can run an editor.
+            #
+            # run_editor(tempdir)
+            #   -> vscode: code --new-window --folder-uri $tempdir
+            #   ->    vim: vim $tempdir
+            #   -> editors that don't support folders -> bash?
+
             os.system(os.getenv('EDITOR', FALLBACK_EDITOR) + f' {tempdir}')
 
             # TODO: Read notes for changes and re-sync.
