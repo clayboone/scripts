@@ -55,8 +55,8 @@ class Config:
             possible_path = Path(self._resolve_environment(possible_path))
             if possible_path.is_dir():
                 self._path = possible_path
-
-        if not self._path:
+                break
+        else:
             self._path = Path(self._resolve_environment(possible_paths[-1]))
             self._path.mkdir()
 
