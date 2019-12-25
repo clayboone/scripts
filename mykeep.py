@@ -31,14 +31,12 @@ class Config:
         self._token_path = self.path / self.TOKEN_FILENAME
 
     @staticmethod
-    def _resolve_environment(unresolved_path: str) -> str:
-        resolved_path = None
-        if match := re.search(r'\$\w+', unresolved_path):
+    def _resolve_environment(pathname: str) -> str:
+        if match := re.search(r'\$\w+', pathname):
             escaped_val = os.getenv(match[0][1:], '').replace('\\', '\\\\')
-            resolved_path = re.sub(r'\$\w+', escaped_val, unresolved_path)
+            pathname = re.sub(r'\$\w+', escaped_val, pathname)
 
-        # FIXME: This is an interesting statement...
-        return resolved_path or unresolved_path
+        return pathname
 
     @property
     def path(self):
@@ -47,9 +45,16 @@ class Config:
             return self._path
 
         if 'win' in sys.platform:
-            possible_paths = ['$USERPROFILE/.mykeep', '$LOCALAPPDATA/mykeep']
+            possible_paths = [
+                '$USERPROFILE/.mykeep',
+                '$LOCALAPPDATA/mykeep',
+            ]
         else:
-            possible_paths = ['$HOME/.mykeep', '$XDG_CONFIG_HOME/mykeep', '$HOME/.config/mykeep']
+            possible_paths = [
+                '$HOME/.mykeep',
+                '$XDG_CONFIG_HOME/mykeep',
+                '$HOME/.config/mykeep',
+            ]
 
         for possible_path in possible_paths:
             possible_path = Path(self._resolve_environment(possible_path))
