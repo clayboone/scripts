@@ -160,6 +160,7 @@ def save_notes(keep: gkeepapi.Keep, dest: Union[Path, str]) -> int:
     bytes_written = []
     for index, note in enumerate(keep.all()):
         log.debug('Saving note "%s"', note.title)
+        index = f'{index:0{len(str(len(keep.all())))}d}'  # Yo Dawg...
         note_path = Path(dest) / f'{index} {remove_invalid_chars(note.title)}.md'
 
         log.debug('Using filename "%s"', str(note_path))
