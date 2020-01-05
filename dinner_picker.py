@@ -7,12 +7,7 @@ import random
 from typing import Optional
 
 
-class Dinner:
-    """Pseudo-random dinner generator."""
-
-    DATE_FMT = "%Y-%m-%d"
-    CHANCE_FOR_TAKEOUT = 0.2
-
+class Meal:
     DINNERS = {
         "easy": [
             "Pizza Bagels",
@@ -23,6 +18,8 @@ class Dinner:
             "Stir Fry (Rice)",
             "Stir Fry (Noodles)",
             "Jacket Potatos",
+            "Chilled Bangers and Mash",
+            "Frozen Hotpot",
             "Frozen Lasagna",
             "Frozen Toad'n'Hole",
         ],
@@ -42,6 +39,24 @@ class Dinner:
             "Frozen Enchiladas",
         ]
     }
+
+    @classmethod
+    def mexican(cls) -> str:
+        return random.choice(cls.DINNERS["mexican"])
+
+    @classmethod
+    def hard(cls) -> str:
+        return random.choice(cls.DINNERS["hard"])
+
+    @classmethod
+    def easy(cls) -> str:
+        return random.choice(cls.DINNERS["easy"])
+
+
+class Dinner:
+    """Pseudo-random dinner generator."""
+    DATE_FMT = "%Y-%m-%d"
+    CHANCE_FOR_TAKEOUT = 0.2
 
     def __init__(self, date: dt.datetime):
         today = dt.date.today().strftime(self.DATE_FMT)
@@ -64,11 +79,11 @@ class Dinner:
             if self.is_takeout_day():
                 self._choice = "Takeout!"
             elif weekday == calendar.TUESDAY:
-                self._choice = random.choice(self.DINNERS["mexican"])
+                self._choice = Meal.mexican()
             elif weekday in (calendar.SATURDAY, calendar.SUNDAY):
-                self._choice = random.choice(self.DINNERS["hard"])
+                self._choice = Meal.hard()
             else:
-                self._choice = random.choice(self.DINNERS["easy"])
+                self._choice = Meal.easy()
 
         return self._choice
 
