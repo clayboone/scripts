@@ -1,87 +1,87 @@
 #!/usr/bin/env python3
 """Print a random dinner based on what we can cook and what day it is."""
 
-import random
 import calendar
-from datetime import (date, timedelta)
+import datetime as dt
+import random
+from typing import Optional
 
 
-class Dinner():
+class Dinner:
     """Pseudo-random dinner generator."""
 
+    CHANCE_FOR_TAKEOUT = 0.2
+
     DINNERS = {
-        'easy': [
-            'Pizza Bagels',
-            'Conchigli Bolognaise',
-            'Linguini Bolognaise',
-            'Cottage Pie',
-            'Shepherd\'s Pie',
-            'Stir Fry (Rice)',
-            'Stir Fry (Noodles)',
-            'Jacket Potatos',
-            'Frozen Lasagna',
-            'Frozen Toad\'n\'Hole',
+        "easy": [
+            "Pizza Bagels",
+            "Conchigli Bolognaise",
+            "Linguini Bolognaise",
+            "Cottage Pie",
+            "Shepherd's Pie",
+            "Stir Fry (Rice)",
+            "Stir Fry (Noodles)",
+            "Jacket Potatos",
+            "Frozen Lasagna",
+            "Frozen Toad'n'Hole",
         ],
-        'hard': [
-            'English Breakfast',
-            'Chicken Roast Dinner',
-            'Homemade Pizza',
-            'Homemade Lasagna',
-            'Homemade Enchiladas',
-            'Homemade Toad\'n\'Hole',
-            'Aubergine Bake',
+        "hard": [
+            "English Breakfast",
+            "Chicken Roast Dinner",
+            "Homemade Pizza",
+            "Homemade Lasagna",
+            "Homemade Enchiladas",
+            "Homemade Toad'n'Hole",
+            "Aubergine Bake",
         ],
-        'tuesdays': [
-            'Tacos!',
-            'Burritos',
-            'Frozen Chimichangas',
-            'Frozen Enchiladas',
+        "tuesdays": [
+            "Tacos!",
+            "Burritos",
+            "Frozen Chimichangas",
+            "Frozen Enchiladas",
         ]
     }
 
-    def __init__(self, datetime_seed=None):
-        self.seed = datetime_seed
-        if datetime_seed is not None:
-            random.seed(self.seed.strftime('%Y%m%d'))
+    def __init__(self, date: dt.datetime):
+        self.date = date.strftime("%Y-%m-%d")
+        self.day_name = date.strftime("%A")
+        self.weekday = calendar.weekday(date.year, date.month, date.day)
+        self._choice: Optional[str] = None
 
-    def __repr__(self):
-        return 'Dinner({})'.format(
-            self.seed
-        )
+        random.seed(self.date)
 
     def __str__(self):
-        """Return a random dinner from one of the lists as a string."""
-        choice = None
+        return self.choose_dinner()
 
-        if random.choices(['normal', 'takeout'],
-                          weights=[0.9, 0.1])[0] == 'takeout':
-            choice = 'Takeout!'
-        else:
-            weekday = calendar.weekday(
-                self.seed.year, self.seed.month, self.seed.day)
-
-            if weekday == 1:
-                choice = random.choice(self.DINNERS['tuesdays'])
-            elif weekday in (5, 6):
-                choice = random.choice(self.DINNERS['hard'])
+    def choose_dinner(self) -> str:
+        """Return a random dinner from the apropriate list."""
+        if not self._choice:
+            if self.is_takeout_day():
+                self._choice = "Takeout!"
+            elif self.weekday == calendar.TUESDAY:
+                self._choice = random.choice(self.DINNERS["tuesdays"])
+            elif self.weekday in (calendar.SATURDAY, calendar.SUNDAY):
+                self._choice = random.choice(self.DINNERS["hard"])
             else:
-                choice = random.choice(self.DINNERS['easy'])
+                self._choice = random.choice(self.DINNERS["easy"])
 
-        return choice
+        return self._choice
 
+    def is_takeout_day(self) -> bool:
+        """Return whether this day is a takeout day."""
+        assert 0.0 <= self.CHANCE_FOR_TAKEOUT <= 1.0
+
+        weights = [self.CHANCE_FOR_TAKEOUT, 1.0 - self.CHANCE_FOR_TAKEOUT]
+        return random.choices([True, False], weights=weights)[0]
 
 def main():
-    """CLI program entry point."""
-    for i in range(-5, 15):
-        seed = date.today() + timedelta(days=i)
-        day = 'Today' if i == 0 else seed.strftime('%A')
-        dinner = Dinner(seed)
+    """Entry point."""
+    today = dt.date.today().strftime("%Y-%m-%d")
+    dinners = [Dinner(dt.date.today() + dt.timedelta(days=_)) for _ in range(-5, 15)]
 
-        fmt = '{} {}:\t{}'
-        if i == 0:
-            fmt = '\n' + fmt + '\n'
-
-        print(fmt.format(seed.strftime('%Y-%m-%d'), day, dinner))
+    for dinner in dinners:
+        fmt = "{0}{1}{0}".format("\n" if dinner.date == today else "", "{} {}:\t{}")
+        print(fmt.format(dinner.date, dinner.day_name, dinner))
 
 
 if __name__ == "__main__":
