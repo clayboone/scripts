@@ -34,7 +34,7 @@ class Dinner:
             "Homemade Toad'n'Hole",
             "Aubergine Bake",
         ],
-        "tuesdays": [
+        "mexican": [
             "Tacos!",
             "Burritos",
             "Frozen Chimichangas",
@@ -43,8 +43,9 @@ class Dinner:
     }
 
     def __init__(self, date: dt.datetime):
+        today = dt.date.today().strftime("%Y-%m-%d")
         self.date = date.strftime("%Y-%m-%d")
-        self.day_name = date.strftime("%A")
+        self.day_name = "Today" if self.date == today else date.strftime("%A")
         self.weekday = calendar.weekday(date.year, date.month, date.day)
         self._choice: Optional[str] = None
 
@@ -59,7 +60,7 @@ class Dinner:
             if self.is_takeout_day():
                 self._choice = "Takeout!"
             elif self.weekday == calendar.TUESDAY:
-                self._choice = random.choice(self.DINNERS["tuesdays"])
+                self._choice = random.choice(self.DINNERS["mexican"])
             elif self.weekday in (calendar.SATURDAY, calendar.SUNDAY):
                 self._choice = random.choice(self.DINNERS["hard"])
             else:
