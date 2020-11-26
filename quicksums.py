@@ -1,20 +1,44 @@
 #!/usr/bin/env python3
 
-import os
+import argparse
+import hashlib
 import sys
-import subprocess
+from pathlib import Path
 
-if len(sys.argv) < 2:
-    print('specify a file')
-    sys.exit()
+HASHERS = [
+    hashlib.md5,
+    hashlib.sha1,
+    hashlib.sha256,
+]
 
-fn = sys.argv[1]
-if not os.path.isfile(fn):
-    print('no file {} could be found'.format(fn))
-    sys.exit()
+WIDTH = max(len(hsh.__name__.removeprefix("openssl_")) for hsh in HASHERS)
 
-progs = ('md5sum', 'sha1sum', 'sha256sum')
 
-for prog in progs:
-    hs = subprocess.check_output([prog, fn])
-    print(str(hs.split()[0], encoding='utf-8'), ' -- ', prog)
+def main():
+    parser = argparse.ArgumentParser(description="Hash some files.")
+    parser.add_argument("files",
+                        nargs=argparse.ONE_OR_MORE,
+                        help=("files to hash"))
+    args = parser.parse_args()
+
+    for file in args.files:
+        try:
+            contents = Path(file).read_bytes()
+        except FileNotFoundError as exc:
+            print(f"{file}: {exc}", file=sys.stderr)
+            continue
+
+        print(f"{file}\n{'=' * len(file)}")
+
+        for hasher in HASHERS:
+            hasher_name = hasher.__name__.removeprefix("openssl_")
+            padding = " " * (WIDTH - len(hasher_name) + 1)
+            digest = hasher(contents).hexdigest()
+
+            print(f"{hasher_name}:{padding}{digest}")
+
+        print()
+
+
+if __name__ == "__main__":
+    main()
